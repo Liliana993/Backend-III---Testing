@@ -1,0 +1,411 @@
+# 🚚 ShipNow API — Pre-entrega Módulo 1
+
+API REST para la gestión de usuarios, productos, órdenes y entregas de **ShipNow**.
+
+Esta versión corresponde a la **Pre-entrega del Módulo 1**, cuyo objetivo principal es refactorizar la API hacia una arquitectura profesional por capas y centralizar la configuración del entorno.
+
+---
+
+## 🎯 Objetivo
+
+El proyecto fue refactorizado desde una estructura monolítica hacia una arquitectura basada en capas:
+
+```text
+Controller → Service → Repository → Model → MongoDB
+```
+
+Esta separación permite mantener responsabilidades claras, facilitar el mantenimiento del código y evitar que los Controllers tengan conocimiento directo de la base de datos.
+
+---
+
+## 🏗️ Arquitectura
+
+El proyecto utiliza una arquitectura de tres capas:
+
+### Controller
+
+Es la única puerta de entrada HTTP.
+
+Sus responsabilidades son:
+
+* Recibir `req` y `res`.
+* Obtener parámetros, query params y body.
+* Invocar los métodos del Service.
+* Devolver el status HTTP y la respuesta correspondiente.
+
+El Controller **no accede directamente a Mongoose ni MongoDB**.
+
+### Service
+
+Contiene la lógica de negocio de la aplicación.
+
+Sus responsabilidades incluyen:
+
+* Validaciones de negocio.
+* Comprobaciones previas a las operaciones.
+* Cálculos.
+* Reglas relacionadas con estados y datos.
+* Coordinación entre diferentes repositories cuando es necesario.
+
+El Service no maneja directamente `req` ni `res`.
+
+### Repository
+
+Es la única capa encargada de comunicarse con Mongoose/MongoDB.
+
+Sus responsabilidades incluyen:
+
+* Consultas a la base de datos.
+* Creación, actualización y eliminación de documentos.
+* Filtros.
+* Proyecciones.
+* `populate`.
+* Ordenamiento de resultados.
+
+De esta manera, la lógica de acceso a datos queda encapsulada.
+
+---
+
+## 📁 Estructura del proyecto
+
+```text
+ShipNow/
+│
+├── src/
+│   ├── config/
+│   │   └── config.js
+│   │
+│   ├── constants/
+│   │   └── index.js
+│   │
+│   ├── controllers/
+│   │   ├── user.controller.js
+│   │   ├── product.controller.js
+│   │   ├── order.controller.js
+│   │   └── delivery.controller.js
+│   │
+│   ├── models/
+│   │   ├── user.model.js
+│   │   ├── product.model.js
+│   │   ├── order.model.js
+│   │   └── delivery.model.js
+│   │
+│   ├── repositories/
+│   │   ├── user.repository.js
+│   │   ├── product.repository.js
+│   │   ├── order.repository.js
+│   │   └── delivery.repository.js
+│   │
+│   ├── routes/
+│   │   ├── user.routes.js
+│   │   ├── product.routes.js
+│   │   ├── order.routes.js
+│   │   └── delivery.routes.js
+│   │
+│   ├── services/
+│   │   ├── user.service.js
+│   │   ├── product.service.js
+│   │   ├── order.service.js
+│   │   └── delivery.service.js
+│   │
+│   ├── app.js
+│   └── server.js
+│
+├── .env.example
+├── .gitignore
+├── package.json
+└── README.md
+```
+
+---
+
+## ⚙️ Tecnologías utilizadas
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* dotenv
+* CORS
+* JavaScript ES Modules
+
+---
+
+## 🔐 Configuración del entorno
+
+Las variables de entorno se centralizan en el módulo de configuración.
+
+El proyecto utiliza un archivo `.env` para las variables locales, pero este archivo **no debe subirse al repositorio**.
+
+Se incluye un `.env.example` como referencia:
+
+```env
+PORT=
+MONGODB_URI=
+NODE_ENV=
+JWT_SECRET=
+```
+
+### Variables principales
+
+| Variable      | Descripción                                                     |
+| ------------- | --------------------------------------------------------------- |
+| `PORT`        | Puerto utilizado por el servidor                                |
+| `MONGODB_URI` | URI de conexión a MongoDB                                       |
+| `NODE_ENV`    | Entorno de ejecución                                            |
+| `JWT_SECRET`  | Clave utilizada para operaciones relacionadas con autenticación |
+
+Las variables críticas son validadas al iniciar la aplicación. Si falta una variable requerida, la aplicación muestra un error descriptivo y detiene el inicio.
+
+---
+
+## 🚀 Instalación
+
+Clonar el repositorio:
+
+```bash
+git clone https://github.com/Liliana993/Backend-III---Testing.git
+```
+
+Ingresar al proyecto:
+
+```bash
+cd ShipNow
+```
+
+Instalar dependencias:
+
+```bash
+npm install
+```
+
+Crear el archivo `.env` a partir de `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+En Windows también se puede crear manualmente el archivo `.env`.
+
+Completar las variables de entorno con los valores correspondientes.
+
+---
+
+## ▶️ Ejecutar el proyecto
+
+Modo desarrollo:
+
+```bash
+npm run dev
+```
+
+Modo normal:
+
+```bash
+npm start
+```
+
+Por defecto, la API utiliza:
+
+```text
+http://localhost:3000
+```
+
+Health check:
+
+```http
+GET /api/health
+```
+
+---
+
+## 👤 Usuarios
+
+Endpoints principales:
+
+```http
+GET    /api/users
+GET    /api/users/:id
+GET    /api/users/email/:email
+POST   /api/users
+PUT    /api/users/:id
+DELETE /api/users/:id
+```
+
+Los roles se encuentran centralizados mediante constantes inmutables:
+
+```js
+USER_ROLE
+```
+
+Ejemplo:
+
+```js
+USER_ROLE.ADMIN
+USER_ROLE.CUSTOMER
+USER_ROLE.DRIVER
+USER_ROLE.STORE
+```
+
+---
+
+## 📦 Productos
+
+Endpoints principales:
+
+```http
+GET    /api/products
+GET    /api/products/:id
+GET    /api/products/name/:name
+POST   /api/products
+PUT    /api/products/:id
+DELETE /api/products/:id
+```
+
+Los estados de producto se encuentran centralizados mediante:
+
+```js
+PRODUCT_STATUS
+```
+
+Ejemplo:
+
+```js
+PRODUCT_STATUS.AVAILABLE
+PRODUCT_STATUS.OUT_OF_STOCK
+PRODUCT_STATUS.DISCONTINUED
+```
+
+La consulta de productos permite utilizar filtros como estado, rango de precios y disponibilidad de stock.
+
+Ejemplo:
+
+```http
+GET /api/products?status=available
+```
+
+---
+
+## 🛵 Órdenes y entregas
+
+El proyecto también cuenta con módulos para la gestión de órdenes y entregas:
+
+```http
+/api/orders
+/api/deliveries
+```
+
+Estos módulos siguen la misma separación de responsabilidades:
+
+```text
+Route
+  ↓
+Controller
+  ↓
+Service
+  ↓
+Repository
+  ↓
+MongoDB
+```
+
+Las órdenes y entregas utilizan constantes para sus estados y prioridades.
+
+---
+
+## 🧩 Constantes
+
+Los valores correspondientes al dominio se encuentran centralizados en:
+
+```text
+src/constants/index.js
+```
+
+Los objetos utilizan `Object.freeze()` para evitar modificaciones accidentales durante la ejecución.
+
+Actualmente se centralizan:
+
+```text
+USER_ROLE
+PRODUCT_STATUS
+ORDER_STATUS
+ORDER_PRIORITY
+DELIVERY_STATUS
+DELIVERY_PRIORITY
+```
+
+Esto evita utilizar strings mágicos repetidos en diferentes partes de la aplicación.
+
+---
+
+## 🧠 ¿Por qué separar Service y Repository?
+
+La separación permite que cada capa tenga una responsabilidad específica.
+
+El **Repository** se ocupa exclusivamente del acceso a datos. Por ejemplo, consultas, filtros, proyecciones, `populate` y operaciones de persistencia.
+
+El **Service** se ocupa de las reglas de negocio. Por ejemplo, validar que un producto tenga datos válidos, comprobar que un usuario no tenga un email duplicado o determinar el estado de un producto según su stock.
+
+De esta manera, el Controller no necesita conocer cómo se almacenan los datos y el Repository no necesita conocer las reglas de negocio.
+
+---
+
+## 🔄 Flujo de una petición
+
+Ejemplo para obtener productos:
+
+```text
+GET /api/products
+       ↓
+Product Route
+       ↓
+Product Controller
+       ↓
+Product Service
+       ↓
+Product Repository
+       ↓
+Product Model
+       ↓
+MongoDB
+```
+
+El resultado vuelve siguiendo el camino inverso hasta llegar al cliente HTTP.
+
+---
+
+## 🔒 Seguridad y buenas prácticas
+
+* Las variables de entorno no se almacenan en Git.
+* `.env` está incluido en `.gitignore`.
+* Se proporciona `.env.example` sin valores reales.
+* Los Controllers no acceden directamente a Mongoose.
+* Los Services contienen la lógica de negocio.
+* Los Repositories encapsulan el acceso a MongoDB.
+* Los valores del dominio se centralizan mediante constantes.
+* Los modelos se utilizan para definir los esquemas de Mongoose.
+
+---
+
+## 📌 Estado de la Pre-entrega
+
+La implementación incluye:
+
+* ✅ Arquitectura Controller-Service-Repository.
+* ✅ Refactorización de Users.
+* ✅ Refactorización de Products.
+* ✅ Configuración de entorno centralizada.
+* ✅ Validación de variables de entorno.
+* ✅ Constantes inmutables.
+* ✅ `.env.example`.
+* ✅ `.gitignore`.
+* ✅ Rutas separadas de la lógica de negocio.
+* ✅ Acceso a MongoDB encapsulado en Repositories.
+
+---
+
+## 👩‍💻 Autor
+
+**Liliana Escobar**
+
+Proyecto realizado como parte de la formación en desarrollo Backend III en CoderHouse.
