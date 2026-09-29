@@ -1,15 +1,15 @@
 import mongoose from "mongoose";
 import app from "./app.js";
-import config from "./config/config.js";
+import config from "./config/env.config.js";
 
 async function startServer() {
   try {
-    await mongoose.connect(config.mongoUri)
+    await mongoose.connect(config.mongodbUri)
     console.log("Base de datos conectada")
 
     app.listen(config.port,()=>{
       console.log(`Servidor iniciado en el puerto ${config.port}`)
-      console.log(`Entorno: ${config.enviroment}`)
+      console.log(`Entorno: ${config.environment}`)
     })
     
   } catch (error) {

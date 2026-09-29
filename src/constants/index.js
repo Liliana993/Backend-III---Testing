@@ -43,3 +43,9 @@ export const USER_ROLE = Object.freeze({
   DRIVER: "driver",
   STORE: "store"
 });
+
+export const MOCKING_PARAMETERS = Object.freeze({
+  MAX: 50,
+  DEFAULT: 10,
+  DEFAULT_PASSWORD: "coder123"
+});

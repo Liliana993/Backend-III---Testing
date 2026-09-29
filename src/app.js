@@ -1,10 +1,11 @@
 import express from "express";
 import cors from "cors";
-import config from "./config/config.js";
+import config from "./config/env.config.js";
 import ordersRouter from "./routes/orders.js";
 import deliveriesRouter from "./routes/deliveries.js";
 import userRouter from "./routes/users.js";
 import productRouter from "./routes/producto.js";
+import mockRouter from "./routes/mock.js";
 const app = express();
 
 app.use(cors());
@@ -13,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rutas
 app.use("/api/users", userRouter);
+app.use("/api/mocks", mockRouter);
 app.use("/api/products", productRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/deliveries', deliveriesRouter);
@@ -21,7 +23,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    enviroment: config.enviroment
+    environment: config.environment
   });
 });
 

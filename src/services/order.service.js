@@ -1,6 +1,7 @@
 import orderRepository from "../repositories/order.repository.js";
 import userRepository from "../repositories/user.repository.js";
-import config from "../config/config.js";
+import config from "../config/env.config.js";
+
 import {
   ORDER_STATUS,
   ORDER_PRIORITY
