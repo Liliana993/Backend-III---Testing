@@ -1,4 +1,6 @@
 import userRepository from "../repositories/user.repository.js";
+import { ERROR_TYPES } from "../constants/index.js";
+import CustomError from "../errors/CustomError.js";
 
 class UserService {
 
@@ -10,7 +12,10 @@ class UserService {
     const user = await userRepository.getById(id);
 
     if (!user) {
-      throw new Error("Usuario no encontrado");
+      throw CustomError.createError({
+        name: ERROR_TYPES.USER_NOT_FOUND,
+        cause: `No existe un usuario con id ${id}`
+      });
     }
 
     return user;
@@ -20,7 +25,10 @@ class UserService {
     const user = await userRepository.getByEmail(email);
 
     if (!user) {
-      throw new Error("Usuario no encontrado");
+      throw CustomError.createError({
+        name: ERROR_TYPES.USER_NOT_FOUND,
+        cause: `No existe un usuario con email ${email}`
+      });
     }
 
     return user;
@@ -29,26 +37,41 @@ class UserService {
   async createUser(data) {
 
     if (!data.firstName) {
-      throw new Error("El nombre es obligatorio");
+      throw CustomError.createError({
+        name: ERROR_TYPES.VALIDATION_ERROR,
+        cause: "El nombre es obligatorio"
+      });
     }
 
     if (!data.lastName) {
-      throw new Error("El apellido es obligatorio");
+      throw CustomError.createError({
+        name: ERROR_TYPES.VALIDATION_ERROR,
+        cause: "El apellido es obligatorio"
+      });
     }
 
     if (!data.email) {
-      throw new Error("El email es obligatorio");
+      throw CustomError.createError({
+        name: ERROR_TYPES.VALIDATION_ERROR,
+        cause: "El email es obligatorio"
+      });
     }
 
     if (!data.password) {
-      throw new Error("La contraseña es obligatoria");
+      throw CustomError.createError({
+        name: ERROR_TYPES.VALIDATION_ERROR,
+        cause: "La contraseña es obligatoria"
+      });
     }
 
     const existingUser =
       await userRepository.getByEmail(data.email);
 
     if (existingUser) {
-      throw new Error("El email ya está registrado");
+       throw CustomError.createError({
+        name: ERROR_TYPES.VALIDATION_ERROR,
+        cause: "El email ya está registrado"
+      });
     }
 
     const userData = {
@@ -68,7 +91,10 @@ class UserService {
         await userRepository.getByEmail(data.email);
 
       if (existingUser && existingUser._id.toString() !== id) {
-        throw new Error("El email ya está registrado");
+        throw CustomError.createError({
+          name: ERROR_TYPES.VALIDATION_ERROR,
+          cause: "El email ya está registrado"
+        });
       }
 
       data.email = data.email.toLowerCase().trim();

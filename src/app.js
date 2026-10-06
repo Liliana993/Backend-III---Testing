@@ -6,6 +6,7 @@ import deliveriesRouter from "./routes/deliveries.js";
 import userRouter from "./routes/users.js";
 import productRouter from "./routes/producto.js";
 import mockRouter from "./routes/mock.js";
+import errorHandler from "./middlewares/errorHandler.js";
 const app = express();
 
 app.use(cors());
@@ -18,6 +19,7 @@ app.use("/api/mocks", mockRouter);
 app.use("/api/products", productRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/deliveries', deliveriesRouter);
+app.use(errorHandler); // Middleware de manejo de errores
 
 app.get("/api/health", (req, res) => {
   res.json({

@@ -1,7 +1,7 @@
 import orderService from "../services/order.service.js";
 
 class OrderController {
-  async getAll(req, res) {
+  async getAll(req, res, next) {
     try {
       const orders = await orderService.getAll(req.query);
 
@@ -11,14 +11,11 @@ class OrderController {
         payload: orders
       });
     } catch (error) {
-      return res.status(500).json({
-        status: "error",
-        message: error.message
-      });
+      next(error); // Pasamos el error al middleware de manejo de errores
     }
   }
 
-  async getOrderById(req, res) {
+  async getOrderById(req, res, next) {
     try {
       const order = await orderService.getOrderById(
         req.params.id
@@ -30,14 +27,11 @@ class OrderController {
         payload: order
       });
     } catch (error) {
-      return res.status(404).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async create(req, res) {
+  async create(req, res, next) {
     try {
       const order = await orderService.create(req.body);
 
@@ -47,14 +41,11 @@ class OrderController {
         payload: order
       });
     } catch (error) {
-      return res.status(400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async update(req, res) {
+  async update(req, res, next) {
     try {
       const order = await orderService.update(
         req.params.id,
@@ -67,14 +58,11 @@ class OrderController {
         payload: order
       });
     } catch (error) {
-      return res.status(400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async delete(req, res) {
+  async delete(req, res, next) {
     try {
       const order = await orderService.delete(
         req.params.id
@@ -86,13 +74,11 @@ class OrderController {
         payload: order
       });
     } catch (error) {
-      return res.status(404).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 }
+
 
 // Exportamos una instancia de la clase OrderController
 export default new OrderController();

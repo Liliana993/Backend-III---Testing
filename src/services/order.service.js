@@ -1,11 +1,13 @@
 import orderRepository from "../repositories/order.repository.js";
 import userRepository from "../repositories/user.repository.js";
 import config from "../config/env.config.js";
-
+// Importamos los tipos de error desde el diccionario de errores
 import {
   ORDER_STATUS,
-  ORDER_PRIORITY
+  ORDER_PRIORITY,
+  ERROR_TYPES
 } from "../constants/index.js";
+import CustomError from "../errors/CustomError.js";
 
 class OrderService {
 
@@ -17,7 +19,10 @@ class OrderService {
     const order = await orderRepository.findById(id);
 
     if (!order) {
-      throw new Error("Orden no encontrada");
+       throw CustomError.createError({
+        name: ERROR_TYPES.ORDER_NOT_FOUND,
+        cause: `No existe una orden con id ${id}`
+  });
     }
 
     return order;
@@ -36,14 +41,20 @@ class OrderService {
       !items ||
       items.length < 1
     ) {
-      throw new Error("Falta información requerida");
+      throw CustomError.createError({
+       name: ERROR_TYPES.VALIDATION_ERROR,
+       cause: "customer, deliveryAddress e items son campos requeridos"
+      });
     }
 
     // El Service no accede directamente a Mongoose.
     const existingCustomer = await userRepository.getById(customer);
 
     if (!existingCustomer) {
-      throw new Error("Cliente no encontrado");
+      throw CustomError.createError({
+       name: ERROR_TYPES.USER_NOT_FOUND,
+       cause: `No existe un usuario con id ${customer}`
+      });
     }
 
     const total = items.reduce((acc, item) => {
@@ -66,13 +77,16 @@ class OrderService {
   }
 
   async update(id, orderData) {
-    const updatedOrder = await this.orderRepository.update(
+    const updatedOrder = await orderRepository.update(
       id,
       orderData
     );
 
     if (!updatedOrder) {
-      throw new Error("Pedido no encontrado");
+      throw CustomError.createError({
+        name: ERROR_TYPES.ORDER_NOT_FOUND,
+        cause: `No existe una orden con id ${id}`
+      });
     }
 
     return updatedOrder;
@@ -82,7 +96,10 @@ class OrderService {
     const deletedOrder = await orderRepository.delete(id);
 
     if (!deletedOrder) {
-      throw new Error("Pedido no encontrado");
+      throw CustomError.createError({
+        name: ERROR_TYPES.ORDER_NOT_FOUND,
+        cause: `No existe una orden con id ${id}`
+      });
     }
 
     return deletedOrder;

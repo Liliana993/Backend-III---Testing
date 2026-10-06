@@ -1,23 +1,29 @@
-# 🚚 ShipNow API — Pre-entrega Módulo 1
+# 🚚 ShipNow API — Pre-entrega Módulo 3
 
 API REST para la gestión de usuarios, productos, órdenes y entregas de ShipNow.
 
-Esta versión corresponde a la Pre-entrega del Módulo 2 — Mocking y carga de datos de prueba, incorporando un sistema de generación de datos simulados y carga controlada en MongoDB, manteniendo la arquitectura por capas desarrollada en el Módulo 1.
+Esta versión corresponde a la **Pre-entrega del Módulo 3 — Manejo profesional de errores**, incorporando un sistema centralizado de manejo de errores, errores personalizados, diccionario de errores y middleware global, manteniendo la arquitectura por capas desarrollada en los módulos anteriores.
+
+El proyecto también incorpora el sistema de mocking y carga controlada de datos de prueba desarrollado en el Módulo 2.
 
 ---
 
 ## 🎯 Objetivo
 
-El proyecto fue refactorizado desde una estructura monolítica hacia una arquitectura basada en capas:
+El proyecto utiliza una arquitectura basada en capas:
 
 ```text
-Controller → Service → Repository → Model → MongoDB
+Route → Controller → Service → Repository → Model → MongoDB
 ```
 
 Esta separación permite mantener responsabilidades claras, facilitar el mantenimiento del código y evitar que los Controllers tengan conocimiento directo de la base de datos.
-En este módulo se incorpora un sistema de mocking para generar usuarios, repartidores, pedidos y entregas de prueba sin depender de datos reales cargados manualmente.
 
-Ahora el sistema permite: 
+El proyecto incorpora un sistema de mocking para generar usuarios, repartidores, pedidos y entregas de prueba sin depender de datos reales cargados manualmente.
+
+En este módulo se incorpora además un sistema centralizado para el manejo profesional de errores.
+
+Ahora el sistema permite:
+
 * Generar datos simulados sin persistirlos.
 * Generar usuarios y repartidores.
 * Generar pedidos asociados a usuarios.
@@ -25,26 +31,52 @@ Ahora el sistema permite:
 * Insertar datos de prueba en MongoDB mediante un endpoint de seed.
 * Validar cantidades de registros a generar.
 * Mantener las relaciones entre las entidades.
-* Utilizar las constantes del dominio para roles, estados y prioridades.
+* Utilizar constantes del dominio para roles, estados, prioridades y tipos de error.
+* Crear errores personalizados mediante `CustomError`.
+* Centralizar la definición de errores mediante un diccionario.
+* Procesar los errores mediante un middleware global.
+* Mantener respuestas de error uniformes y predecibles.
+* Detectar los errores de negocio dentro de la capa Service.
+* Evitar respuestas de error dispersas entre Controllers y Routes.
 
 ---
 
-## 🏗️ Arquitectura
+# 🏗️ Arquitectura
 
-El proyecto utiliza una arquitectura de tres capas:
+El proyecto utiliza una arquitectura por capas:
+
+### Route
+
+Define los endpoints disponibles de la API y delega las solicitudes al Controller correspondiente.
 
 ### Controller
 
-Es la única puerta de entrada HTTP.
+Es la puerta de entrada HTTP.
 
 Sus responsabilidades son:
 
 * Recibir `req` y `res`.
 * Obtener parámetros, query params y body.
 * Invocar los métodos del Service.
-* Devolver el status HTTP y la respuesta correspondiente.
+* Devolver las respuestas exitosas.
+* Delegar los errores al middleware global mediante `next(error)`.
 
 El Controller **no accede directamente a Mongoose ni MongoDB**.
+
+Ejemplo:
+
+```js
+try {
+  const user = await userService.getUserById(id);
+
+  return res.status(200).json({
+    status: "success",
+    payload: user
+  });
+} catch (error) {
+  next(error);
+}
+```
 
 ### Service
 
@@ -56,9 +88,12 @@ Sus responsabilidades incluyen:
 * Comprobaciones previas a las operaciones.
 * Cálculos.
 * Reglas relacionadas con estados y datos.
-* Coordinación entre diferentes repositories cuando es necesario.
+* Coordinación entre diferentes repositories.
+* Detección y generación de errores de dominio.
 
 El Service no maneja directamente `req` ni `res`.
+
+Cuando ocurre un error de negocio, el Service genera un `CustomError` que posteriormente será procesado por el middleware global.
 
 ### Repository
 
@@ -75,9 +110,17 @@ Sus responsabilidades incluyen:
 
 De esta manera, la lógica de acceso a datos queda encapsulada.
 
+### Model
+
+Define los esquemas y modelos utilizados por Mongoose.
+
+### MongoDB
+
+Es la capa de persistencia de los datos.
+
 ---
 
-## 📁 Estructura del proyecto
+# 📁 Estructura del proyecto
 
 ```text
 ShipNow/
@@ -93,8 +136,15 @@ ShipNow/
 │   │   ├── user.controller.js
 │   │   ├── product.controller.js
 │   │   ├── order.controller.js
-│   │   └── delivery.controller.js
-│   |   └── mock.controller.js
+│   │   ├── delivery.controller.js
+│   │   └── mock.controller.js
+│   │
+│   ├── errors/
+│   │   ├── CustomError.js
+│   │   └── errorDictionary.js
+│   │
+│   ├── middlewares/
+│   │   └── errorHandler.js
 │   │
 │   ├── models/
 │   │   ├── user.model.js
@@ -102,11 +152,11 @@ ShipNow/
 │   │   ├── order.model.js
 │   │   └── delivery.model.js
 │   │
-│   ├── mocks/ 
-│   │   ├── user.mocks.js 
-│   │   ├── order.mocks.js 
+│   ├── mocks/
+│   │   ├── user.mocks.js
+│   │   ├── order.mocks.js
 │   │   └── delivery.mocks.js
-|   |
+│   │
 │   ├── repositories/
 │   │   ├── user.repository.js
 │   │   ├── product.repository.js
@@ -117,14 +167,14 @@ ShipNow/
 │   │   ├── user.routes.js
 │   │   ├── product.routes.js
 │   │   ├── order.routes.js
-│   │   └── delivery.routes.js
-|   |   └── mock.routes.js
+│   │   ├── delivery.routes.js
+│   │   └── mock.routes.js
 │   │
 │   ├── services/
 │   │   ├── user.service.js
 │   │   ├── product.service.js
 │   │   ├── order.service.js
-│   │   └── delivery.service.js
+│   │   ├── delivery.service.js
 │   │   └── mock.service.js
 │   │
 │   ├── app.js
@@ -138,7 +188,7 @@ ShipNow/
 
 ---
 
-## ⚙️ Tecnologías utilizadas
+# ⚙️ Tecnologías utilizadas
 
 * Node.js
 * Express.js
@@ -152,7 +202,7 @@ ShipNow/
 
 ---
 
-## 🔐 Configuración del entorno
+# 🔐 Configuración del entorno
 
 Las variables de entorno se centralizan en el módulo de configuración.
 
@@ -180,7 +230,7 @@ Las variables críticas son validadas al iniciar la aplicación. Si falta una va
 
 ---
 
-## 🚀 Instalación
+# 🚀 Instalación
 
 Clonar el repositorio:
 
@@ -212,15 +262,15 @@ Completar las variables de entorno con los valores correspondientes.
 
 ---
 
-## ▶️ Ejecutar el proyecto
+# ▶️ Ejecutar el proyecto
 
-Modo desarrollo:
+### Modo desarrollo
 
 ```bash
 npm run dev
 ```
 
-Modo normal:
+### Modo normal
 
 ```bash
 npm start
@@ -232,7 +282,7 @@ Por defecto, la API utiliza:
 http://localhost:3000
 ```
 
-Health check:
+### Health check
 
 ```http
 GET /api/health
@@ -240,7 +290,7 @@ GET /api/health
 
 ---
 
-## 👤 Usuarios
+# 👤 Usuarios
 
 Endpoints principales:
 
@@ -270,7 +320,7 @@ USER_ROLE.STORE
 
 ---
 
-## 📦 Productos
+# 📦 Productos
 
 Endpoints principales:
 
@@ -307,7 +357,7 @@ GET /api/products?status=available
 
 ---
 
-## 🛵 Órdenes y entregas
+# 🛵 Órdenes y entregas
 
 El proyecto también cuenta con módulos para la gestión de órdenes y entregas:
 
@@ -327,6 +377,8 @@ Service
   ↓
 Repository
   ↓
+Model
+  ↓
 MongoDB
 ```
 
@@ -340,9 +392,11 @@ El sistema de mocking utiliza Faker para generar datos simulados.
 
 Los datos generados respetan la estructura de los modelos reales de ShipNow.
 
-Los módulos de mocking se encuentran separados de las ruta:
-```
+Los módulos de mocking se encuentran separados de las rutas:
+
+```text
 src/mocks/
+
 ├── user.mocks.js
 ├── order.mocks.js
 └── delivery.mocks.js
@@ -350,22 +404,31 @@ src/mocks/
 
 La lógica de coordinación se encuentra en:
 
+```text
 src/services/mock.service.js
+```
 
 Y las rutas específicas en:
 
+```text
 src/routes/mock.routes.js
+```
+
+---
 
 ## 👤 Generación de usuarios
 
 Endpoint:
 
+```http
 GET /api/mocks/users?qty=10
+```
 
 Genera usuarios simulados sin almacenarlos en MongoDB.
 
 Ejemplo:
-```
+
+```json
 {
   "status": "success",
   "count": 2,
@@ -392,23 +455,30 @@ Este endpoint solamente genera los datos y no los persiste.
 
 Los roles utilizados provienen de las constantes del proyecto.
 
+---
+
 ## 🛵 Generación de repartidores
 
 Endpoint:
 
+```http
 GET /api/mocks/drivers?qty=10
+```
 
 Genera usuarios cuyo rol es:
 
+```text
 driver
+```
 
 Los registros generados no se almacenan en MongoDB.
 
 Ejemplo:
-```
+
+```json
 {
   "status": "success",
-  "count": 2,
+  "count": 1,
   "data": [
     {
       "firstName": "Dena",
@@ -421,27 +491,34 @@ Ejemplo:
 }
 ```
 
+---
+
 ## 🌱 Seed de datos de prueba
 
 Endpoint:
 
+```http
 POST /api/mocks/seed?qty=3
+```
 
 El endpoint genera e inserta datos de prueba en MongoDB.
 
 Por cada cantidad solicitada se generan:
 
-Un customer.
-Un driver.
-Un order.
-Una delivery.
+* Un customer.
+* Un driver.
+* Un order.
+* Una delivery.
 
-Por ejemplo:
+Ejemplo:
 
+```http
 POST /api/mocks/seed?qty=3
+```
 
 Puede generar:
-```
+
+```json
 {
   "status": "success",
   "message": "Datos de prueba insertados correctamente",
@@ -456,30 +533,38 @@ Puede generar:
   }
 }
 ```
+
 Los registros son almacenados mediante los respectivos Repositories.
 
-## 🔗 Relaciones entre entidades
+---
+
+# 🔗 Relaciones entre entidades
 
 El sistema mantiene las relaciones principales del dominio.
 
-Order → Customer
+### Order → Customer
 
 Cada pedido generado se asocia a un usuario con rol:
 
+```text
 customer
-Delivery → Order
+```
+
+### Delivery → Order
 
 Cada entrega generada se asocia a un pedido existente.
 
-Delivery → Driver
+### Delivery → Driver
 
 Cada entrega puede asociarse a un usuario cuyo rol es:
 
+```text
 driver
-
-La estructura resultante es:
 ```
 
+La estructura resultante es:
+
+```text
 User
  ├── customer
  │      ↓
@@ -488,19 +573,21 @@ User
  │   Delivery
  │      ↓
  └── driver
- ```
+```
 
-Las relaciones fueron implementadas utilizando referencias de MongoDB y populate() en los Repositories correspondientes.
+Las relaciones fueron implementadas utilizando referencias de MongoDB y `populate()` en los Repositories correspondientes.
 
-## 🔐 Contraseñas
+---
+
+# 🔐 Contraseñas
 
 Las contraseñas de los usuarios persistidos no se almacenan en texto plano.
 
-El modelo User utiliza bcrypt mediante un middleware pre("save").
+El modelo User utiliza bcrypt mediante un middleware `pre("save")`.
 
 Flujo:
-```
 
+```text
 password original
       ↓
 User.create()
@@ -510,39 +597,514 @@ pre("save")
 bcrypt.hash()
       ↓
 MongoDB
-
 ```
 
 La contraseña utilizada para los datos de prueba es:
 
+```text
 coder123
+```
 
 Cuando un usuario es almacenado, la contraseña se transforma en un hash mediante bcrypt.
 
-## 📏 Validación de cantidades
+---
+
+# 📏 Validación de cantidades
 
 La generación de datos utiliza los parámetros definidos en las constantes del proyecto.
 
 Actualmente se permite generar entre:
 
+```text
 1 y 50 registros
+```
 
 Ejemplo válido:
 
+```http
+GET /api/mocks/users?qty=10
 ```
 
-GET /api/mocks/users?qty=10
+Ejemplos inválidos:
 
-Ejemplo inválido:
-
+```http
 GET /api/mocks/users?qty=0
-
-También se rechazan cantidades superiores al máximo permitido:
-
+GET /api/mocks/users?qty=-5
 POST /api/mocks/seed?qty=51
 ```
 
-## 🧩 Constantes
+También se rechazan valores que no sean números enteros válidos.
+
+Ejemplo:
+
+```http
+GET /api/mocks/users?qty=abc
+```
+
+Las cantidades inválidas son procesadas mediante el sistema centralizado de errores.
+
+---
+
+# ❗ Manejo profesional de errores
+
+El Módulo 3 incorpora un sistema centralizado para el manejo de errores.
+
+El objetivo es evitar que cada Controller o Route construya respuestas de error diferentes y permitir que todos los errores sean procesados mediante una única capa.
+
+La estructura implementada es:
+
+```text
+Service
+   ↓
+CustomError
+   ↓
+Controller
+   ↓
+next(error)
+   ↓
+errorHandler
+   ↓
+HTTP Response
+```
+
+---
+
+## 📁 Estructura de errores
+
+Los errores se encuentran centralizados en:
+
+```text
+src/errors/
+
+├── CustomError.js
+└── errorDictionary.js
+```
+
+El middleware global se encuentra en:
+
+```text
+src/middlewares/errorHandler.js
+```
+
+Los tipos de error se encuentran centralizados junto con las constantes del dominio:
+
+```text
+src/constants/index.js
+```
+
+---
+
+## 🧩 Tipos de error
+
+Actualmente se encuentran definidos los siguientes tipos:
+
+```js
+ERROR_TYPES
+```
+
+Incluye:
+
+```text
+USER_NOT_FOUND
+ORDER_NOT_FOUND
+DELIVERY_NOT_FOUND
+INVALID_STATUS
+INVALID_QUANTITY
+MOCK_GENERATION_ERROR
+MOCK_DATABASE_ERROR
+VALIDATION_ERROR
+DATABASE_ERROR
+```
+
+De esta manera se evita utilizar strings de error repetidos en diferentes partes de la aplicación.
+
+---
+
+## 🗂️ Diccionario de errores
+
+El archivo:
+
+```text
+src/errors/errorDictionary.js
+```
+
+centraliza la información asociada a cada tipo de error.
+
+Cada error define:
+
+* Código interno.
+* Status HTTP.
+* Mensaje por defecto.
+
+Ejemplo:
+
+```js
+[ERROR_TYPES.USER_NOT_FOUND]: {
+  status: 404,
+  message: "Usuario no encontrado"
+}
+```
+
+Otro ejemplo:
+
+```js
+[ERROR_TYPES.INVALID_QUANTITY]: {
+  status: 400,
+  message: "La cantidad debe ser un número entero positivo entre 1 y 50"
+}
+```
+
+Esto permite mantener respuestas consistentes en toda la API.
+
+---
+
+# 🛠️ CustomError
+
+El archivo:
+
+```text
+src/errors/CustomError.js
+```
+
+define una clase personalizada que extiende de `Error`.
+
+La clase permite crear errores utilizando el tipo definido en `ERROR_TYPES`.
+
+Ejemplo:
+
+```js
+throw CustomError.createError({
+  name: ERROR_TYPES.USER_NOT_FOUND,
+  cause: `No existe un usuario con id ${id}`
+});
+```
+
+El `CustomError` obtiene automáticamente desde el diccionario:
+
+* El status HTTP.
+* El mensaje correspondiente.
+
+También permite agregar información adicional mediante `cause`.
+
+---
+
+# 🌐 Middleware global de errores
+
+El middleware:
+
+```text
+src/middlewares/errorHandler.js
+```
+
+es el encargado de transformar los errores en respuestas HTTP uniformes.
+
+Se registra después de las rutas:
+
+```js
+app.use(errorHandler);
+```
+
+Esto permite que los errores propagados mediante:
+
+```js
+next(error)
+```
+
+sean recibidos por una única capa.
+
+---
+
+## 📋 Formato de respuesta de error
+
+Las respuestas utilizan una estructura uniforme:
+
+```json
+{
+  "status": "error",
+  "error": "USER_NOT_FOUND",
+  "message": "Usuario no encontrado",
+  "cause": "No existe un usuario con id 123"
+}
+```
+
+La estructura general es:
+
+```text
+status
+error
+message
+cause
+```
+
+Esto permite que el cliente pueda interpretar los errores de forma predecible.
+
+---
+
+# 🔎 Errores de validación
+
+Los errores de validación de negocio son detectados en la capa Service.
+
+Por ejemplo, al buscar un usuario inexistente:
+
+```js
+const user = await userRepository.getById(id);
+
+if (!user) {
+  throw CustomError.createError({
+    name: ERROR_TYPES.USER_NOT_FOUND,
+    cause: `No existe un usuario con id ${id}`
+  });
+}
+```
+
+El Controller no genera la respuesta de error.
+
+Solamente propaga el error:
+
+```js
+catch (error) {
+  next(error);
+}
+```
+
+El middleware global es quien construye la respuesta HTTP.
+
+---
+
+# 🛵 Errores de órdenes y entregas
+
+Las mismas reglas se aplican a órdenes y entregas.
+
+Ejemplos de errores contemplados:
+
+```text
+ORDER_NOT_FOUND
+DELIVERY_NOT_FOUND
+INVALID_STATUS
+VALIDATION_ERROR
+```
+
+Por ejemplo, una operación de delivery puede generar un error si intenta ejecutarse en un estado no permitido:
+
+```text
+INVALID_STATUS
+```
+
+Esto permite centralizar las reglas relacionadas con el flujo de estados.
+
+---
+
+# 🎲 Errores del sistema de Mocking
+
+El sistema de mocking también utiliza el manejo centralizado de errores.
+
+## Cantidad inválida
+
+Las cantidades se validan antes de generar datos.
+
+Ejemplos:
+
+```http
+GET /api/mocks/users?qty=0
+```
+
+```http
+GET /api/mocks/users?qty=-5
+```
+
+```http
+GET /api/mocks/users?qty=51
+```
+
+Estos casos generan:
+
+```text
+INVALID_QUANTITY
+```
+
+con status HTTP:
+
+```text
+400 Bad Request
+```
+
+---
+
+## Error durante la generación
+
+Los errores producidos durante la generación de usuarios y drivers son transformados en:
+
+```text
+MOCK_GENERATION_ERROR
+```
+
+con status:
+
+```text
+500 Internal Server Error
+```
+
+---
+
+## Error durante la persistencia
+
+Los errores producidos durante la carga de datos mock en MongoDB son transformados en:
+
+```text
+MOCK_DATABASE_ERROR
+```
+
+con status:
+
+```text
+500 Internal Server Error
+```
+
+De esta manera, los errores de generación y persistencia no quedan expuestos directamente al cliente.
+
+---
+
+# 🧪 Pruebas de manejo de errores
+
+Se realizaron pruebas utilizando los endpoints de la API.
+
+### Cantidad válida
+
+```http
+GET /api/mocks/users?qty=3
+```
+
+Resultado esperado:
+
+```text
+200 OK
+```
+
+---
+
+### Cantidad igual a cero
+
+```http
+GET /api/mocks/users?qty=0
+```
+
+Resultado esperado:
+
+```text
+400 Bad Request
+```
+
+Error:
+
+```text
+INVALID_QUANTITY
+```
+
+---
+
+### Cantidad negativa
+
+```http
+GET /api/mocks/users?qty=-5
+```
+
+Resultado esperado:
+
+```text
+400 Bad Request
+```
+
+Error:
+
+```text
+INVALID_QUANTITY
+```
+
+---
+
+### Cantidad superior al máximo
+
+```http
+POST /api/mocks/seed?qty=51
+```
+
+Resultado esperado:
+
+```text
+400 Bad Request
+```
+
+Error:
+
+```text
+INVALID_QUANTITY
+```
+
+---
+
+### ID con formato inválido — Usuario
+
+```http
+GET /api/users/123
+```
+
+Resultado esperado:
+
+```text
+400 Bad Request
+```
+
+Error:
+
+```text
+VALIDATION_ERROR
+```
+
+El middleware global detecta el `CastError` de Mongoose y lo transforma en una respuesta controlada.
+
+---
+
+### ID con formato inválido — Orden
+
+```http
+GET /api/orders/123
+```
+
+Resultado esperado:
+
+```text
+400 Bad Request
+```
+
+Error:
+
+```text
+VALIDATION_ERROR
+```
+
+---
+
+### ID con formato inválido — Delivery
+
+```http
+GET /api/deliveries/123
+```
+
+Resultado esperado:
+
+```text
+400 Bad Request
+```
+
+Error:
+
+```text
+VALIDATION_ERROR
+```
+
+---
+
+# 🧩 Constantes
 
 Los valores correspondientes al dominio se encuentran centralizados en:
 
@@ -561,25 +1123,73 @@ ORDER_STATUS
 ORDER_PRIORITY
 DELIVERY_STATUS
 DELIVERY_PRIORITY
+ERROR_TYPES
 ```
 
 Esto evita utilizar strings mágicos repetidos en diferentes partes de la aplicación.
 
 ---
 
-## 🧠 ¿Por qué separar Service y Repository?
+# 🧠 ¿Por qué separar Service y Repository?
 
 La separación permite que cada capa tenga una responsabilidad específica.
 
-El **Repository** se ocupa exclusivamente del acceso a datos. Por ejemplo, consultas, filtros, proyecciones, `populate` y operaciones de persistencia.
+El **Repository** se ocupa exclusivamente del acceso a datos. Por ejemplo:
 
-El **Service** se ocupa de las reglas de negocio. Por ejemplo, validar que un producto tenga datos válidos, comprobar que un usuario no tenga un email duplicado o determinar el estado de un producto según su stock.
+* Consultas.
+* Filtros.
+* Proyecciones.
+* `populate`.
+* Operaciones de persistencia.
+
+El **Service** se ocupa de:
+
+* Reglas de negocio.
+* Validaciones.
+* Comprobaciones previas.
+* Coordinación entre repositories.
+* Manejo de errores de dominio.
 
 De esta manera, el Controller no necesita conocer cómo se almacenan los datos y el Repository no necesita conocer las reglas de negocio.
 
 ---
 
-## 🔄 Flujo de una petición
+# 🧠 ¿Por qué centralizar los errores?
+
+El manejo centralizado permite evitar respuestas inconsistentes.
+
+Sin un middleware global, cada Controller podría devolver estructuras diferentes:
+
+```text
+Controller A → { error: "..." }
+
+Controller B → { message: "..." }
+
+Controller C → { status: 400, detail: "..." }
+```
+
+Con el sistema implementado, los errores siguen una estructura común:
+
+```json
+{
+  "status": "error",
+  "error": "ERROR_TYPE",
+  "message": "Mensaje del error",
+  "cause": "Información adicional"
+}
+```
+
+Esto facilita:
+
+* El mantenimiento.
+* La depuración.
+* La integración con clientes frontend.
+* La identificación de errores.
+* La evolución futura de la API.
+
+---
+
+# 🔄 Flujo de una petición exitosa
 
 Ejemplo para obtener productos:
 
@@ -603,7 +1213,35 @@ El resultado vuelve siguiendo el camino inverso hasta llegar al cliente HTTP.
 
 ---
 
-## 🔒 Seguridad y buenas prácticas
+# 🔄 Flujo de una petición con error
+
+Cuando ocurre un error de negocio:
+
+```text
+GET /api/users/:id
+       ↓
+User Route
+       ↓
+User Controller
+       ↓
+User Service
+       ↓
+CustomError
+       ↓
+next(error)
+       ↓
+errorHandler
+       ↓
+HTTP Response
+```
+
+El Controller no necesita conocer cómo debe responder el error.
+
+El middleware global se encarga de transformar el error en una respuesta HTTP uniforme.
+
+---
+
+# 🔒 Seguridad y buenas prácticas
 
 * Las variables de entorno no se almacenan en Git.
 * `.env` está incluido en `.gitignore`.
@@ -612,40 +1250,69 @@ El resultado vuelve siguiendo el camino inverso hasta llegar al cliente HTTP.
 * Los Services contienen la lógica de negocio.
 * Los Repositories encapsulan el acceso a MongoDB.
 * Los valores del dominio se centralizan mediante constantes.
+* Los tipos de error se centralizan mediante `ERROR_TYPES`.
+* Los errores de negocio utilizan `CustomError`.
+* Los errores se procesan mediante un middleware global.
 * Los modelos se utilizan para definir los esquemas de Mongoose.
+* Las respuestas de error mantienen una estructura uniforme.
 
 ---
-
-Acceso a MongoDB encapsulado en Repositories.
 
 # 📌 Estado de la Pre-entrega
 
 La implementación incluye:
 
-✅ Arquitectura Controller-Service-Repository.
-✅ Configuración de entorno centralizada.
-✅ Validación de variables de entorno.
-✅ Constantes inmutables.
-✅ .env.example.
-✅ .gitignore.
-✅ Rutas separadas de la lógica de negocio.
-✅ Acceso a MongoDB encapsulado en Repositories.
-✅ Sistema de mocking con Faker.
-✅ Mocking de usuarios.
-✅ Mocking de repartidores.
-✅ Mocking de órdenes.
-✅ Mocking de entregas.
-✅ Router específico /api/mocks.
-✅ Endpoint de generación sin persistencia.
-✅ Endpoint de seed para carga controlada.
-✅ Relaciones entre usuarios, órdenes y entregas.
-✅ Validación de cantidades.
-✅ Contraseñas persistidas mediante bcrypt.
+### Arquitectura
+
+* ✅ Arquitectura Controller-Service-Repository.
+* ✅ Separación de Routes, Controllers, Services y Repositories.
+* ✅ Acceso a MongoDB encapsulado en Repositories.
+* ✅ Configuración de entorno centralizada.
+* ✅ Validación de variables de entorno.
+* ✅ Constantes inmutables.
+* ✅ `.env.example`.
+* ✅ `.gitignore`.
+
+### Mocking
+
+* ✅ Sistema de mocking con Faker.
+* ✅ Mocking de usuarios.
+* ✅ Mocking de repartidores.
+* ✅ Mocking de órdenes.
+* ✅ Mocking de entregas.
+* ✅ Router específico `/api/mocks`.
+* ✅ Endpoint de generación sin persistencia.
+* ✅ Endpoint de seed para carga controlada.
+* ✅ Relaciones entre usuarios, órdenes y entregas.
+* ✅ Validación de cantidades.
+* ✅ Validación de cantidades negativas.
+* ✅ Validación de cantidades superiores al máximo.
+* ✅ Contraseñas persistidas mediante bcrypt.
+
+### Manejo profesional de errores
+
+* ✅ Capa centralizada de errores.
+* ✅ `CustomError`.
+* ✅ `errorDictionary`.
+* ✅ `ERROR_TYPES`.
+* ✅ Middleware global `errorHandler`.
+* ✅ Propagación de errores mediante `next(error)`.
+* ✅ Errores de usuario inexistente.
+* ✅ Errores de orden inexistente.
+* ✅ Errores de delivery inexistente.
+* ✅ Errores de estados inválidos.
+* ✅ Errores de validación.
+* ✅ Errores de cantidad inválida.
+* ✅ Errores de generación de mocks.
+* ✅ Errores de persistencia de mocks.
+* ✅ Manejo controlado de `CastError` de Mongoose.
+* ✅ Respuestas de error uniformes.
+* ✅ Pruebas de casos inválidos.
 
 ---
 
-## 👩‍💻 Autor
+# 👩‍💻 Autora
 
-**Liliana Escobar**
+**Liliana Beatriz Escobar**
 
 Proyecto realizado como parte de la formación en desarrollo Backend III en CoderHouse.

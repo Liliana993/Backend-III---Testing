@@ -2,7 +2,7 @@ import deliveryService from "../services/delivery.service.js";
 
 class DeliveryController {
 
-  async getAll(req, res) {
+  async getAll(req, res, next) {
     try {
       const { status, priority, driver } = req.query;
 
@@ -18,14 +18,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(500).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async getById(req, res) {
+  async getById(req, res, next) {
     try {
       const { id } = req.params;
 
@@ -37,14 +34,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(404).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async getByOrder(req, res) {
+  async getByOrder(req, res, next) {
     try {
       const { orderId } = req.params;
 
@@ -56,14 +50,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(404).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async getByDriver(req, res) {
+  async getByDriver(req, res, next) {
     try {
       const { driverId } = req.params;
 
@@ -76,14 +67,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(500).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async create(req, res) {
+  async create(req, res, next) {
     try {
       const delivery = await deliveryService.createDelivery(req.body);
 
@@ -94,14 +82,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async assignDriver(req, res) {
+  async assignDriver(req, res, next) {
     try {
       const { id } = req.params;
       const { driverId } = req.body;
@@ -116,14 +101,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async startDelivery(req, res) {
+  async startDelivery(req, res, next) {
     try {
       const { id } = req.params;
 
@@ -137,14 +119,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async completeDelivery(req, res) {
+  async completeDelivery(req, res, next) {
     try {
       const { id } = req.params;
 
@@ -158,14 +137,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async updatePriority(req, res) {
+  async updatePriority(req, res, next) {
     try {
       const { id } = req.params;
       const { priority } = req.body;
@@ -180,14 +156,11 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(400).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 
-  async delete(req, res) {
+  async delete(req, res, next) {
     try {
       const { id } = req.params;
 
@@ -199,10 +172,7 @@ class DeliveryController {
       });
 
     } catch (error) {
-      res.status(404).json({
-        status: "error",
-        message: error.message
-      });
+      next(error);
     }
   }
 }

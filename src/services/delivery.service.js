@@ -1,6 +1,7 @@
 import deliveryRepository from "../repositories/delivery.repository.js";
 import orderRepository from "../repositories/order.repository.js";
-import { DELIVERY_STATUS, DELIVERY_PRIORITY } from "../constants/index.js";
+import { DELIVERY_STATUS, DELIVERY_PRIORITY, ERROR_TYPES } from "../constants/index.js";
+import CustomError from "../errors/CustomError.js";
 
 class DeliveryService {
 
@@ -12,7 +13,10 @@ class DeliveryService {
     const delivery = await deliveryRepository.getById(id);
 
     if (!delivery) {
-      throw new Error("Delivery no encontrado");
+      throw CustomError.createError({
+        name: ERROR_TYPES.DELIVERY_NOT_FOUND,
+        cause: `No existe un delivery con id ${id}`
+      });
     }
 
     return delivery;
@@ -22,7 +26,10 @@ class DeliveryService {
     const delivery = await deliveryRepository.getByOrder(orderId);
 
     if (!delivery) {
-      throw new Error("No existe un delivery para este pedido");
+      throw CustomError.createError({
+        name: ERROR_TYPES.DELIVERY_NOT_FOUND,
+        cause: `No existe un delivery para el pedido ${orderId}`
+      });
     }
 
     return delivery;
@@ -34,19 +41,28 @@ class DeliveryService {
 
   async createDelivery(data) {
   if (!data.order) {
-    throw new Error("El pedido es obligatorio");
+    throw CustomError.createError({
+      name: ERROR_TYPES.DELIVERY_INVALID_DATA,
+      cause: "El pedido es obligatorio"
+    });
   }
 
   const order = await orderRepository.findById(data.order);
 
   if (!order) {
-    throw new Error("El pedido no existe");
+    throw CustomError.createError({
+      name: ERROR_TYPES.ORDER_NOT_FOUND,
+      cause: `El pedido ${data.order} no existe`
+    });
   }
 
   const existingDelivery = await deliveryRepository.getByOrder(data.order);
 
   if (existingDelivery) {
-    throw new Error("Ya existe un delivery para este pedido");
+    throw CustomError.createError({
+      name: ERROR_TYPES.DELIVERY_ALREADY_EXISTS,
+      cause: "Ya existe un delivery para este pedido"
+    });
   }
 
   const deliveryData = {
@@ -71,15 +87,17 @@ class DeliveryService {
       await this.getDeliveryById(deliveryId);
 
     if (delivery.status !== DELIVERY_STATUS.PENDING) {
-      throw new Error(
-        "Solo se puede asignar un repartidor a un delivery pendiente"
-      );
+      throw CustomError.createError({
+        name: ERROR_TYPES.DELIVERY_INVALID_STATUS,
+        cause: "Solo se puede asignar un repartidor a un delivery pendiente"
+      });
     }
 
     if (!driverId) {
-      throw new Error(
-        "El repartidor es obligatorio"
-      );
+      throw CustomError.createError({
+        name: ERROR_TYPES.DELIVERY_INVALID_DATA,
+        cause: "El repartidor es obligatorio"
+      });
     }
 
     return await deliveryRepository.updateById(
@@ -98,9 +116,11 @@ class DeliveryService {
       await this.getDeliveryById(deliveryId);
 
     if (delivery.status !== DELIVERY_STATUS.ASSIGNED) {
-      throw new Error(
-        "El delivery debe estar asignado antes de iniciar el traslado"
-      );
+      throw CustomError.createError({
+        name: ERROR_TYPES.INVALID_STATUS,
+        cause:
+          "El delivery debe estar asignado antes de iniciar el traslado"
+      });
     }
 
     return await deliveryRepository.updateById(
@@ -117,9 +137,11 @@ class DeliveryService {
       await this.getDeliveryById(deliveryId);
 
     if (delivery.status !== DELIVERY_STATUS.IN_TRANSIT) {
-      throw new Error(
-        "El delivery debe estar en tránsito antes de marcarlo como entregado"
-      );
+      throw CustomError.createError({
+        name: ERROR_TYPES.INVALID_STATUS,
+        cause:
+          "El delivery debe estar en tránsito antes de marcarlo como entregado"
+      });
     }
 
     return await deliveryRepository.updateById(
@@ -134,9 +156,10 @@ class DeliveryService {
   async updatePriority(deliveryId, priority) {
 
     if (!Object.values(DELIVERY_PRIORITY).includes(priority)) {
-      throw new Error(
-        "Prioridad de delivery inválida"
-      );
+      throw CustomError.createError({
+        name: ERROR_TYPES.DELIVERY_INVALID_DATA,
+        cause: "Prioridad de delivery inválida"
+      });
     }
 
     await this.getDeliveryById(deliveryId);
