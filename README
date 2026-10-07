@@ -127,14 +127,14 @@ ShipNow/
 │
 ├── src/
 │   ├── config/
-│   │   └── config.js
+│   │   └── env.config.js
 │   │
 │   ├── constants/
 │   │   └── index.js
 │   │
 │   ├── controllers/
 │   │   ├── user.controller.js
-│   │   ├── product.controller.js
+│   │   ├── producto.controller.js
 │   │   ├── order.controller.js
 │   │   ├── delivery.controller.js
 │   │   └── mock.controller.js
@@ -148,7 +148,7 @@ ShipNow/
 │   │
 │   ├── models/
 │   │   ├── user.model.js
-│   │   ├── product.model.js
+│   │   ├── producto.model.js
 │   │   ├── order.model.js
 │   │   └── delivery.model.js
 │   │
@@ -159,20 +159,20 @@ ShipNow/
 │   │
 │   ├── repositories/
 │   │   ├── user.repository.js
-│   │   ├── product.repository.js
+│   │   ├── producto.repository.js
 │   │   ├── order.repository.js
 │   │   └── delivery.repository.js
 │   │
 │   ├── routes/
-│   │   ├── user.routes.js
-│   │   ├── product.routes.js
-│   │   ├── order.routes.js
-│   │   ├── delivery.routes.js
-│   │   └── mock.routes.js
+│   │   ├── users.js
+│   │   ├── producto.js
+│   │   ├── orders.js
+│   │   ├── deliveries.js
+│   │   └── mock.js
 │   │
 │   ├── services/
 │   │   ├── user.service.js
-│   │   ├── product.service.js
+│   │   ├── producto.service.js
 │   │   ├── order.service.js
 │   │   ├── delivery.service.js
 │   │   └── mock.service.js

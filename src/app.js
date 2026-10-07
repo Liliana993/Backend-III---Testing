@@ -19,7 +19,6 @@ app.use("/api/mocks", mockRouter);
 app.use("/api/products", productRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/deliveries', deliveriesRouter);
-app.use(errorHandler); // Middleware de manejo de errores
 
 app.get("/api/health", (req, res) => {
   res.json({
@@ -29,11 +28,17 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use((req, res) => {
-  res.status(404).json({
-    status: "error",
-    message: "Ruta no encontrada"
-  });
+// Catch all para rutas no encontradas
+app.use((req, res, next) => {
+  next(
+    CustomError.createError({
+      name: ERROR_TYPES.ROUTE_NOT_FOUND,
+      cause: `La ruta ${req.method} ${req.originalUrl} no existe`
+    })
+  );
 });
+
+// Middleware de manejo de errores
+app.use(errorHandler);
 
 export default app;
