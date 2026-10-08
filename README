@@ -1,8 +1,8 @@
-# 🚚 ShipNow API — Pre-entrega Módulo 3
+# 🚚 ShipNow API — Pre-entrega Módulo 4
 
 API REST para la gestión de usuarios, productos, órdenes y entregas de ShipNow.
 
-Esta versión corresponde a la **Pre-entrega del Módulo 3 — Manejo profesional de errores**, incorporando un sistema centralizado de manejo de errores, errores personalizados, diccionario de errores y middleware global, manteniendo la arquitectura por capas desarrollada en los módulos anteriores.
+Esta versión corresponde a la **Pre-entrega del Módulo 4 — Logging y monitoreo básico**, incorporando un sistema centralizado de manejo de errores, errores personalizados, diccionario de errores y middleware global, manteniendo la arquitectura por capas desarrollada en los módulos anteriores.
 
 El proyecto también incorpora el sistema de mocking y carga controlada de datos de prueba desarrollado en el Módulo 2.
 
@@ -128,6 +128,7 @@ ShipNow/
 ├── src/
 │   ├── config/
 │   │   └── env.config.js
+|   |   └──logger.config.js
 │   │
 │   ├── constants/
 │   │   └── index.js
@@ -137,6 +138,7 @@ ShipNow/
 │   │   ├── producto.controller.js
 │   │   ├── order.controller.js
 │   │   ├── delivery.controller.js
+|   |   ├── logger.controller.js
 │   │   └── mock.controller.js
 │   │
 │   ├── errors/
@@ -166,6 +168,7 @@ ShipNow/
 │   ├── routes/
 │   │   ├── users.js
 │   │   ├── producto.js
+|   |   ├── logger.js
 │   │   ├── orders.js
 │   │   ├── deliveries.js
 │   │   └── mock.js
@@ -175,6 +178,7 @@ ShipNow/
 │   │   ├── producto.service.js
 │   │   ├── order.service.js
 │   │   ├── delivery.service.js
+|   |   ├── logger.service.js 
 │   │   └── mock.service.js
 │   │
 │   ├── app.js
@@ -1104,6 +1108,190 @@ VALIDATION_ERROR
 
 ---
 
+# 📋 Logging y monitoreo básico
+
+El Módulo 4 incorpora un sistema centralizado de logging utilizando **Winston** y **winston-daily-rotate-file**.
+
+El objetivo es evitar el uso disperso de `console.log()` y `console.error()` y centralizar los eventos importantes de la aplicación.
+
+La arquitectura mantiene la separación por capas:
+
+```text
+Route → Controller → Service → Logger
+```
+
+El logger se encuentra centralizado en:
+
+```text
+src/config/logger.config.js
+```
+
+Los componentes de prueba del logger se encuentran en:
+
+```text
+src/routes/logger.js
+src/controllers/logger.controller.js
+src/services/logger.service.js
+```
+
+## 🔢 Niveles de logging
+
+El proyecto utiliza los siguientes niveles:
+
+| Nivel | Uso |
+| --- | --- |
+| `debug` | Información detallada para desarrollo y diagnóstico |
+| `http` | Eventos relacionados con solicitudes HTTP |
+| `info` | Eventos normales y operaciones exitosas |
+| `warning` | Situaciones esperables que requieren atención |
+| `error` | Errores de la aplicación que no detienen necesariamente el proceso |
+| `fatal` | Errores críticos que impiden continuar la ejecución |
+
+### Ejemplos implementados
+
+- Inicio del servidor → `info`.
+- Conexión a MongoDB → `info`.
+- Inicio y finalización del seed → `debug` / `info`.
+- Cantidad inválida en mocks → `warning`.
+- Ruta inexistente → `warning`.
+- Errores inesperados → `error`.
+- Fallo crítico durante el inicio del servidor → `fatal`.
+
+## 🌎 Comportamiento según el entorno
+
+El logger utiliza la variable:
+
+```env
+NODE_ENV=development
+```
+
+En desarrollo se habilita el nivel `debug`, permitiendo observar información detallada durante las pruebas.
+
+En entornos más controlados se utiliza un nivel mínimo `info`, evitando registrar mensajes de diagnóstico de menor prioridad.
+
+## 📁 Persistencia de logs
+
+Los logs se almacenan en:
+
+```text
+logs/
+```
+
+Se generan archivos diarios mediante `winston-daily-rotate-file`:
+
+```text
+logs/combined-YYYY-MM-DD.log
+logs/error-YYYY-MM-DD.log
+```
+
+El archivo `combined` contiene los eventos generales registrados por la aplicación.
+
+El archivo `error` está destinado exclusivamente a los niveles:
+
+```text
+error
+fatal
+```
+
+## 🔄 Rotación de archivos
+
+Los archivos utilizan rotación diaria.
+
+La configuración actual conserva:
+
+- Logs generales durante 14 días.
+- Logs de errores durante 30 días.
+
+Esto evita que los archivos de log crezcan indefinidamente.
+
+## 🧪 Endpoint de prueba del logger
+
+Para comprobar todos los niveles disponibles se implementó:
+
+```http
+GET /api/logger/test
+```
+
+El endpoint ejecuta:
+
+```text
+debug
+http
+info
+warning
+error
+fatal
+```
+
+Ejemplo:
+
+```http
+GET http://localhost:3000/api/logger/test
+```
+
+Respuesta esperada:
+
+```json
+{
+  "status": "success",
+  "message": "Todos los niveles de logging fueron ejecutados correctamente"
+}
+```
+
+El endpoint es exclusivamente de prueba y los mensajes `error` y `fatal` generados por él son intencionales.
+
+## 🚨 Integración con el manejo global de errores
+
+El logger está integrado con:
+
+```text
+src/middlewares/errorHandler.js
+```
+
+Los errores de validación y de negocio se registran como eventos de advertencia cuando corresponde, mientras que los errores inesperados se registran como errores.
+
+Los errores críticos producidos durante el inicio del servidor se registran mediante `fatal`.
+
+El flujo general es:
+
+```text
+Request
+   ↓
+Route
+   ↓
+Controller
+   ↓
+Service
+   ↓
+Error
+   ↓
+errorHandler
+   ↓
+Winston
+   ↓
+Console + archivos de log
+```
+
+## 🔒 Archivos excluidos de Git
+
+Los archivos generados durante la ejecución no deben subirse al repositorio.
+
+El `.gitignore` incluye:
+
+```gitignore
+/node_modules
+/logs
+.env
+```
+
+De esta manera se evita versionar:
+
+- Dependencias instaladas.
+- Logs generados.
+- Variables de entorno y credenciales locales.
+
+---
+
 # 🧩 Constantes
 
 Los valores correspondientes al dominio se encuentran centralizados en:
@@ -1289,14 +1477,14 @@ La implementación incluye:
 * ✅ Validación de cantidades superiores al máximo.
 * ✅ Contraseñas persistidas mediante bcrypt.
 
-### Manejo profesional de errores
+### Manejo profesional de errores**
 
 * ✅ Capa centralizada de errores.
-* ✅ `CustomError`.
-* ✅ `errorDictionary`.
-* ✅ `ERROR_TYPES`.
-* ✅ Middleware global `errorHandler`.
-* ✅ Propagación de errores mediante `next(error)`.
+* ✅ \`CustomError\`.
+* ✅ \`errorDictionary\`.
+* ✅ \`ERROR_TYPES\`.
+* ✅ Middleware global \`errorHandler\`.
+* ✅ Propagación de errores mediante \`next(error)\`.
 * ✅ Errores de usuario inexistente.
 * ✅ Errores de orden inexistente.
 * ✅ Errores de delivery inexistente.
@@ -1305,9 +1493,30 @@ La implementación incluye:
 * ✅ Errores de cantidad inválida.
 * ✅ Errores de generación de mocks.
 * ✅ Errores de persistencia de mocks.
-* ✅ Manejo controlado de `CastError` de Mongoose.
+* ✅ Manejo controlado de \`CastError\` de Mongoose.
 * ✅ Respuestas de error uniformes.
 * ✅ Pruebas de casos inválidos.
+
+
+### Logging y monitoreo básico**
+
+* ✅ Winston como sistema centralizado de logging.
+* ✅ Niveles `debug`, `http`, `info`, `warning`, `error` y `fatal`.
+* ✅ Configuración centralizada del logger.
+* ✅ Comportamiento según `NODE_ENV`.
+* ✅ Registro de inicio del servidor.
+* ✅ Registro de conexión a MongoDB.
+* ✅ Registro de generación de mocks.
+* ✅ Registro de seed.
+* ✅ Registro de cantidades inválidas.
+* ✅ Registro de rutas inexistentes.
+* ✅ Integración con `errorHandler`.
+* ✅ Persistencia de logs en archivos.
+* ✅ Rotación diaria de logs.
+* ✅ Archivo de errores separado.
+* ✅ Endpoint `/api/logger/test`.
+* ✅ Directorio `logs/` excluido mediante `.gitignore`.
+* ✅ `node_modules/` excluido mediante `.gitignore`.
 
 ---
 

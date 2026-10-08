@@ -1,19 +1,20 @@
 import mongoose from "mongoose";
 import app from "./app.js";
 import config from "./config/env.config.js";
+import logger from "./config/logger.config.js";
 
 async function startServer() {
   try {
     await mongoose.connect(config.mongodbUri)
-    console.log("Base de datos conectada")
+    logger.info("Base de datos conectada")
 
     app.listen(config.port,()=>{
-      console.log(`Servidor iniciado en el puerto ${config.port}`)
-      console.log(`Entorno: ${config.environment}`)
+      logger.info(`Servidor iniciado en el puerto ${config.port}`)
+      logger.info(`Entorno: ${config.environment}`)
     })
     
   } catch (error) {
-    console.log("Error al iniciar el servido", error.message)
+    logger.fatal(`Error al iniciar el servidor: ${error.message}`)
     process.exit(1)
   }
   

@@ -6,7 +6,11 @@ import deliveriesRouter from "./routes/deliveries.js";
 import userRouter from "./routes/users.js";
 import productRouter from "./routes/producto.js";
 import mockRouter from "./routes/mock.js";
+import loggerRouter from "./routes/logger.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import CustomError from "./errors/CustomError.js";
+import { ERROR_TYPES } from "./constants/index.js";
+
 const app = express();
 
 app.use(cors());
@@ -19,6 +23,7 @@ app.use("/api/mocks", mockRouter);
 app.use("/api/products", productRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/deliveries', deliveriesRouter);
+app.use("/api/logger", loggerRouter);
 
 app.get("/api/health", (req, res) => {
   res.json({

@@ -10,6 +10,11 @@ const ERROR_DICTIONARY = {
     status: 404,
     message: "Pedido no encontrado"
   },
+  
+  [ERROR_TYPES.ROUTE_NOT_FOUND]: {
+  status: 404,
+  message: "Ruta no encontrada"
+  },
 
   [ERROR_TYPES.DELIVERY_NOT_FOUND]: {
     status: 404,
