@@ -1272,6 +1272,24 @@ Winston
 Console + archivos de log
 ```
 
+### 🌎 Comportamiento según el entorno
+
+La configuración del logger utiliza la variable de entorno `NODE_ENV`.
+
+- **Desarrollo (`NODE_ENV=development`):** se registran los niveles desde `debug` en adelante, incluyendo mensajes detallados útiles para las pruebas y la depuración.
+- **Producción y otros entornos:** los transportes de consola y del archivo general registran desde `info` en adelante, reduciendo el volumen de mensajes de diagnóstico.
+
+El archivo de errores mantiene un transporte independiente configurado desde el nivel `error`, por lo que registra los eventos `error` y `fatal`.
+
+### 📁 Persistencia y rotación de logs
+
+Los registros se guardan en el directorio `logs/`, que se crea o utiliza durante la ejecución de la aplicación.
+
+- `logs/combined-YYYY-MM-DD.log`: contiene los eventos que superan el nivel mínimo configurado para el entorno.
+- `logs/error-YYYY-MM-DD.log`: contiene los eventos de nivel `error` y `fatal`.
+
+La rotación es diaria. Se conservan los archivos generales durante 14 días y los archivos de errores durante 30 días, según la configuración de `winston-daily-rotate-file`.
+
 ## 🔒 Archivos excluidos de Git
 
 Los archivos generados durante la ejecución no deben subirse al repositorio.

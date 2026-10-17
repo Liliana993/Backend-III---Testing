@@ -1,6 +1,8 @@
 import orderRepository from "../repositories/order.repository.js";
 import userRepository from "../repositories/user.repository.js";
 import config from "../config/env.config.js";
+// Importamos el logger para registrar eventos importantes
+import logger from "../config/logger.config.js";
 // Importamos los tipos de error desde el diccionario de errores
 import {
   ORDER_STATUS,
@@ -19,6 +21,8 @@ class OrderService {
     const order = await orderRepository.findById(id);
 
     if (!order) {
+      logger.warning(`Pedido no encontrado: ${id}`);
+
        throw CustomError.createError({
         name: ERROR_TYPES.ORDER_NOT_FOUND,
         cause: `No existe una orden con id ${id}`
