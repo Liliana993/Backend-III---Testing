@@ -266,6 +266,53 @@ Completar las variables de entorno con los valores correspondientes.
 
 ---
 
+## 📚 Documentación de la API con Swagger
+
+ShipNow utiliza **Swagger (OpenAPI)** para documentar los endpoints de la API REST y facilitar su exploración y prueba.
+
+La documentación interactiva permite consultar las rutas disponibles, conocer los parámetros requeridos, visualizar los formatos de respuesta y ejecutar solicitudes HTTP directamente desde la interfaz de Swagger UI.
+
+### 🚀 Acceso a la documentación
+
+Una vez iniciado el servidor, accede a la siguiente dirección:
+
+```text
+http://localhost:3000/api-docs
+```
+
+> **Nota:** El servidor debe estar en ejecución para acceder a la documentación. Si configuraste otro puerto mediante variables de entorno, reemplaza `3000` por el puerto correspondiente.
+
+### 🛠️ Funcionalidades documentadas
+
+La documentación está organizada por categorías para facilitar la navegación:
+
+| Categoría | Descripción |
+|---|---|
+| **Users** | Operaciones relacionadas con usuarios. |
+| **Products** | Operaciones relacionadas con los productos de ShipNow. |
+| **Orders** | Consulta y gestión de pedidos. |
+| **Deliveries** | Consulta y gestión de entregas, asignación de conductores y actualización de estados y prioridades. |
+| **Mocks** | Generación de datos ficticios e inserción de datos de prueba en la base de datos. |
+| **Logger** | Pruebas de los niveles de logging configurados en la aplicación. |
+
+### 🧪 Cómo probar los endpoints
+
+1. Inicia el servidor de ShipNow.
+2. Abre Swagger UI en `http://localhost:3000/api-docs`.
+3. Selecciona la categoría del endpoint que deseas probar.
+4. Expande la operación HTTP correspondiente.
+5. Haz clic en **Try it out**.
+6. Completa los parámetros requeridos.
+7. Haz clic en **Execute** para enviar la solicitud.
+8. Revisa el código HTTP, los encabezados y el cuerpo de la respuesta.
+
+### ⚠️ Consideraciones
+
+- Los ejemplos y esquemas de respuesta describen el comportamiento esperado de cada endpoint.
+- Los resultados reales dependen de los datos disponibles y de la implementación del backend.
+- El endpoint `POST /api/mocks/seed` inserta datos en la base de datos; úsalo con precaución.
+- El endpoint `GET /api/logger/test` ejecuta mensajes de prueba en los niveles de logging configurados.
+
 # ▶️ Ejecutar el proyecto
 
 ### Modo desarrollo

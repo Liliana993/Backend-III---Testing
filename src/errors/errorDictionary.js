@@ -49,6 +49,20 @@ const ERROR_DICTIONARY = {
   [ERROR_TYPES.DATABASE_ERROR]: {
     status: 500,
     message: "Error de base de datos"
+  },
+    [ERROR_TYPES.DELIVERY_INVALID_DATA]: {
+    status: 400,
+    message: "Datos de entrega inválidos"
+  },
+
+  [ERROR_TYPES.DELIVERY_INVALID_STATUS]: {
+    status: 400,
+    message: "El estado actual de la entrega no permite esta operación"
+  },
+
+  [ERROR_TYPES.DELIVERY_ALREADY_EXISTS]: {
+    status: 409,
+    message: "Ya existe una entrega para este pedido"
   }
 };
 
