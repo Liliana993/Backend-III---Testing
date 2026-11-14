@@ -1,5 +1,12 @@
-import dotenv from "dotenv"
-dotenv.config()
+import dotenv from "dotenv";
+
+// Seleccionar el archivo de variables según el entorno
+const envFile = process.env.NODE_ENV === "test"
+    ? ".env.test"
+    : ".env";
+
+dotenv.config({ path: envFile });
+
 // Configuración de variables de entorno
 const requiredEnvs = ["MONGODB_URI", "JWT_SECRET"]
 

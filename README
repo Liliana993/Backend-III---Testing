@@ -1,14 +1,22 @@
-# 🚚 ShipNow API — Pre-entrega Módulo 4
+# 🚚 ShipNow API — Pre-entrega Módulo 6
 
 API REST para la gestión de usuarios, productos, órdenes y entregas de ShipNow.
 
-Esta versión corresponde a la **Pre-entrega del Módulo 4 — Logging y monitoreo básico**, incorporando un sistema centralizado de manejo de errores, errores personalizados, diccionario de errores y middleware global, manteniendo la arquitectura por capas desarrollada en los módulos anteriores.
+Esta versión corresponde a la **Pre-entrega del Módulo 6 — Testing funcional**, incorporando pruebas automatizadas de integración y funcionalidad mediante **Mocha, Chai y Supertest**.
 
-El proyecto también incorpora el sistema de mocking y carga controlada de datos de prueba desarrollado en el Módulo 2.
+El proyecto mantiene la arquitectura por capas desarrollada en los módulos anteriores e integra los siguientes componentes:
+
+- Sistema de mocking y carga controlada de datos de prueba.
+- Manejo centralizado de errores mediante `CustomError`.
+- Diccionario de errores y middleware global.
+- Logging y monitoreo básico con Winston.
+- Documentación de endpoints mediante Swagger.
+- Pruebas funcionales de los principales recursos de la API.
+- Entorno de testing independiente con una base de datos exclusiva.
 
 ---
 
-## 🎯 Objetivo
+# 🎯 Objetivo
 
 El proyecto utiliza una arquitectura basada en capas:
 
@@ -18,32 +26,27 @@ Route → Controller → Service → Repository → Model → MongoDB
 
 Esta separación permite mantener responsabilidades claras, facilitar el mantenimiento del código y evitar que los Controllers tengan conocimiento directo de la base de datos.
 
-El proyecto incorpora un sistema de mocking para generar usuarios, repartidores, pedidos y entregas de prueba sin depender de datos reales cargados manualmente.
+El proyecto permite:
 
-En este módulo se incorpora además un sistema centralizado para el manejo profesional de errores.
-
-Ahora el sistema permite:
-
-* Generar datos simulados sin persistirlos.
-* Generar usuarios y repartidores.
-* Generar pedidos asociados a usuarios.
-* Generar entregas asociadas a pedidos y repartidores.
-* Insertar datos de prueba en MongoDB mediante un endpoint de seed.
-* Validar cantidades de registros a generar.
-* Mantener las relaciones entre las entidades.
-* Utilizar constantes del dominio para roles, estados, prioridades y tipos de error.
-* Crear errores personalizados mediante `CustomError`.
-* Centralizar la definición de errores mediante un diccionario.
-* Procesar los errores mediante un middleware global.
-* Mantener respuestas de error uniformes y predecibles.
-* Detectar los errores de negocio dentro de la capa Service.
-* Evitar respuestas de error dispersas entre Controllers y Routes.
+- Gestionar usuarios, productos, órdenes y entregas.
+- Generar datos simulados mediante Faker.
+- Generar usuarios, repartidores, pedidos y entregas de prueba.
+- Insertar datos de prueba en MongoDB mediante un endpoint de seed.
+- Validar cantidades de registros a generar.
+- Mantener relaciones entre las entidades.
+- Utilizar constantes del dominio para roles, estados, prioridades y tipos de error.
+- Crear errores personalizados mediante `CustomError`.
+- Centralizar la definición de errores mediante un diccionario.
+- Procesar los errores mediante un middleware global.
+- Registrar eventos y errores mediante Winston.
+- Documentar los endpoints mediante Swagger.
+- Verificar el comportamiento de la API mediante pruebas automatizadas.
 
 ---
 
 # 🏗️ Arquitectura
 
-El proyecto utiliza una arquitectura por capas:
+El proyecto utiliza una arquitectura por capas.
 
 ### Route
 
@@ -55,13 +58,13 @@ Es la puerta de entrada HTTP.
 
 Sus responsabilidades son:
 
-* Recibir `req` y `res`.
-* Obtener parámetros, query params y body.
-* Invocar los métodos del Service.
-* Devolver las respuestas exitosas.
-* Delegar los errores al middleware global mediante `next(error)`.
+- Recibir `req` y `res`.
+- Obtener parámetros, query params y body.
+- Invocar los métodos del Service.
+- Devolver las respuestas exitosas.
+- Delegar los errores al middleware global mediante `next(error)`.
 
-El Controller **no accede directamente a Mongoose ni MongoDB**.
+El Controller no accede directamente a Mongoose ni MongoDB.
 
 Ejemplo:
 
@@ -84,12 +87,12 @@ Contiene la lógica de negocio de la aplicación.
 
 Sus responsabilidades incluyen:
 
-* Validaciones de negocio.
-* Comprobaciones previas a las operaciones.
-* Cálculos.
-* Reglas relacionadas con estados y datos.
-* Coordinación entre diferentes repositories.
-* Detección y generación de errores de dominio.
+- Validaciones de negocio.
+- Comprobaciones previas a las operaciones.
+- Cálculos.
+- Reglas relacionadas con estados y datos.
+- Coordinación entre diferentes repositories.
+- Detección y generación de errores de dominio.
 
 El Service no maneja directamente `req` ni `res`.
 
@@ -101,12 +104,12 @@ Es la única capa encargada de comunicarse con Mongoose/MongoDB.
 
 Sus responsabilidades incluyen:
 
-* Consultas a la base de datos.
-* Creación, actualización y eliminación de documentos.
-* Filtros.
-* Proyecciones.
-* `populate`.
-* Ordenamiento de resultados.
+- Consultas a la base de datos.
+- Creación, actualización y eliminación de documentos.
+- Filtros.
+- Proyecciones.
+- `populate`.
+- Ordenamiento de resultados.
 
 De esta manera, la lógica de acceso a datos queda encapsulada.
 
@@ -127,19 +130,27 @@ ShipNow/
 │
 ├── src/
 │   ├── config/
-│   │   └── env.config.js
-|   |   └──logger.config.js
+│   │   ├── env.config.js
+│   │   ├── logger.config.js
+│   │   └── swagger.js
 │   │
 │   ├── constants/
 │   │   └── index.js
 │   │
 │   ├── controllers/
-│   │   ├── user.controller.js
-│   │   ├── producto.controller.js
-│   │   ├── order.controller.js
 │   │   ├── delivery.controller.js
-|   |   ├── logger.controller.js
-│   │   └── mock.controller.js
+│   │   ├── logger.controller.js
+│   │   ├── mock.controller.js
+│   │   ├── order.controller.js
+│   │   ├── producto.controller.js
+│   │   └── user.controller.js
+│   │
+│   ├── docs/
+│   │   ├── common.schema.js
+│   │   ├── delivery.schema.js
+│   │   ├── order.schemas.js
+│   │   ├── product.schema.js
+│   │   └── user.schema.js
 │   │
 │   ├── errors/
 │   │   ├── CustomError.js
@@ -148,45 +159,60 @@ ShipNow/
 │   ├── middlewares/
 │   │   └── errorHandler.js
 │   │
-│   ├── models/
-│   │   ├── user.model.js
-│   │   ├── producto.model.js
-│   │   ├── order.model.js
-│   │   └── delivery.model.js
-│   │
 │   ├── mocks/
 │   │   ├── user.mocks.js
 │   │   ├── order.mocks.js
-│   │   └── delivery.mocks.js
+│   │   └── delvery.mocks.js
+│   │
+│   ├── models/
+│   │   ├── delivery.model.js
+│   │   ├── order.model.js
+│   │   ├── producto.model.js
+│   │   └── user.model.js
 │   │
 │   ├── repositories/
-│   │   ├── user.repository.js
-│   │   ├── producto.repository.js
+│   │   ├── delivery.repository.js
 │   │   ├── order.repository.js
-│   │   └── delivery.repository.js
+│   │   ├── producto.repository.js
+│   │   └── user.repository.js
 │   │
 │   ├── routes/
-│   │   ├── users.js
-│   │   ├── producto.js
-|   |   ├── logger.js
-│   │   ├── orders.js
 │   │   ├── deliveries.js
-│   │   └── mock.js
+│   │   ├── logger.js
+│   │   ├── mock.js
+│   │   ├── orders.js
+│   │   ├── producto.js
+│   │   └── users.js
 │   │
 │   ├── services/
-│   │   ├── user.service.js
-│   │   ├── producto.service.js
-│   │   ├── order.service.js
 │   │   ├── delivery.service.js
-|   |   ├── logger.service.js 
-│   │   └── mock.service.js
+│   │   ├── logger.service.js
+│   │   ├── mock.service.js
+│   │   ├── order.service.js
+│   │   ├── producto.service.js
+│   │   └── user.service.js
 │   │
 │   ├── app.js
 │   └── server.js
 │
+├── tests/
+│   ├── users/
+│   │   └── user.test.js
+│   ├── orders/
+│   │   └── order.test.js
+│   ├── mocks/
+│   │   └── mock.test.js
+│   ├── logger/
+│   │   └── logger.test.js
+│   ├── docs/
+│   │   └── swagger.test.js
+│   └── setup.js
+│
 ├── .env.example
+├── .env.test.example
 ├── .gitignore
 ├── package.json
+├── package-lock.json
 └── README.md
 ```
 
@@ -194,15 +220,36 @@ ShipNow/
 
 # ⚙️ Tecnologías utilizadas
 
-* Node.js
-* Express.js
-* MongoDB
-* Mongoose
-* Faker
-* bcrypt
-* dotenv
-* CORS
-* JavaScript ES Modules
+### Backend
+
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- Faker
+- bcrypt
+- dotenv
+- CORS
+- JavaScript ES Modules
+
+### Documentación
+
+- Swagger
+- OpenAPI
+- swagger-jsdoc
+- swagger-ui-express
+
+### Logging
+
+- Winston
+- winston-daily-rotate-file
+
+### Testing
+
+- Mocha
+- Chai
+- Supertest
+- cross-env
 
 ---
 
@@ -210,27 +257,44 @@ ShipNow/
 
 Las variables de entorno se centralizan en el módulo de configuración.
 
-El proyecto utiliza un archivo `.env` para las variables locales, pero este archivo **no debe subirse al repositorio**.
+El proyecto utiliza archivos `.env` para las variables locales. Estos archivos no deben subirse al repositorio.
 
-Se incluye un `.env.example` como referencia:
+Se incluyen dos archivos de ejemplo:
 
-```env
-PORT=
-MONGODB_URI=
-NODE_ENV=
-JWT_SECRET=
-```
+- `.env.example`: configuración del entorno de desarrollo.
+- `.env.test.example`: configuración del entorno de testing.
 
 ### Variables principales
 
-| Variable      | Descripción                                                     |
-| ------------- | --------------------------------------------------------------- |
-| `PORT`        | Puerto utilizado por el servidor                                |
-| `MONGODB_URI` | URI de conexión a MongoDB                                       |
-| `NODE_ENV`    | Entorno de ejecución                                            |
-| `JWT_SECRET`  | Clave utilizada para operaciones relacionadas con autenticación |
+| Variable | Descripción |
+|---|---|
+| `PORT` | Puerto utilizado por el servidor |
+| `MONGODB_URI` | URI de conexión a MongoDB |
+| `NODE_ENV` | Entorno de ejecución |
+| `JWT_SECRET` | Clave utilizada para operaciones relacionadas con autenticación |
 
 Las variables críticas son validadas al iniciar la aplicación. Si falta una variable requerida, la aplicación muestra un error descriptivo y detiene el inicio.
+
+### Entorno de desarrollo
+
+Crear el archivo `.env` a partir de `.env.example` y completar las variables correspondientes.
+
+### Entorno de testing
+
+Para ejecutar las pruebas se utiliza un archivo independiente llamado `.env.test`.
+
+Ejemplo de configuración:
+
+```env
+NODE_ENV=test
+PORT=3001
+MONGODB_URI=mongodb://127.0.0.1:27017/shipnow_test
+JWT_SECRET=clave_secreta_exclusiva_para_testing
+```
+
+La base de datos `shipnow_test` se utiliza exclusivamente para las pruebas automatizadas, evitando modificar los datos del entorno de desarrollo.
+
+El archivo `.env.test` no debe subirse al repositorio. Para compartir la configuración se incluye `.env.test.example`, sin credenciales reales.
 
 ---
 
@@ -248,7 +312,7 @@ Ingresar al proyecto:
 cd ShipNow
 ```
 
-Instalar dependencias:
+Instalar las dependencias:
 
 ```bash
 npm install
@@ -260,58 +324,254 @@ Crear el archivo `.env` a partir de `.env.example`:
 cp .env.example .env
 ```
 
-En Windows también se puede crear manualmente el archivo `.env`.
+Crear el archivo `.env.test` a partir de `.env.test.example`:
 
-Completar las variables de entorno con los valores correspondientes.
+```bash
+cp .env.test.example .env.test
+```
+
+En Windows también se pueden crear ambos archivos manualmente.
+
+Completar las variables de entorno con los valores correspondientes y verificar que MongoDB se encuentre disponible.
 
 ---
 
-## 📚 Documentación de la API con Swagger
+# 🧪 Testing funcional
+
+El proyecto incorpora pruebas funcionales automatizadas para verificar el comportamiento de los principales endpoints de la API REST.
+
+Se utilizan **Mocha, Chai y Supertest** para ejecutar las pruebas, realizar solicitudes HTTP y comprobar las respuestas.
+
+### Herramientas utilizadas
+
+| Herramienta | Función |
+|---|---|
+| Mocha | Framework para organizar y ejecutar las pruebas |
+| Chai | Librería de aserciones para validar resultados |
+| Supertest | Permite realizar solicitudes HTTP a la aplicación Express |
+| cross-env | Permite establecer variables de entorno de forma compatible entre sistemas operativos |
+
+### Separación entre aplicación y servidor
+
+Para facilitar las pruebas, la configuración de Express se encuentra separada del inicio del servidor.
+
+- `src/app.js`: configura Express, registra middlewares y rutas, y exporta la aplicación.
+- `src/server.js`: establece la conexión con MongoDB e inicia el servidor mediante `app.listen()`.
+
+De esta manera, Supertest puede importar la aplicación sin iniciar un servidor HTTP independiente.
+
+### Organización de las pruebas
+
+Los archivos de testing se encuentran dentro de la carpeta `tests/`, organizados por recurso:
+
+```text
+tests/
+│
+├── users/
+│   └── user.test.js
+│
+├── orders/
+│   └── order.test.js
+│
+├── mocks/
+│   └── mock.test.js
+│
+├── logger/
+│   └── logger.test.js
+│
+├── docs/
+│   └── swagger.test.js
+│
+└── setup.js
+```
+
+Esta organización permite mantener las pruebas separadas por funcionalidad y facilita su mantenimiento.
+
+### Configuración inicial de las pruebas
+
+El archivo `tests/setup.js` centraliza la configuración de la base de datos utilizada durante el testing.
+
+Sus responsabilidades son:
+
+- Verificar que el entorno sea `test`.
+- Comprobar que la base de datos utilizada sea exclusivamente `shipnow_test`.
+- Establecer la conexión con MongoDB antes de ejecutar las pruebas.
+- Limpiar las colecciones antes de cada prueba.
+- Cerrar la conexión al finalizar la ejecución.
+
+La limpieza de las colecciones permite que las pruebas comiencen con datos controlados y no dependan de registros creados anteriormente.
+
+### Ejecutar las pruebas
+
+El proyecto utiliza el siguiente comando:
+
+```bash
+npm test
+```
+
+El script configurado en `package.json` es:
+
+```json
+"test": "cross-env NODE_ENV=test mocha --require tests/setup.js \"tests/**/*.test.js\" --timeout 10000"
+```
+
+Este comando establece el entorno de testing, carga la configuración inicial y ejecuta todos los archivos de prueba encontrados dentro de `tests/`.
+
+### Módulos cubiertos
+
+**Usuarios (`tests/users/user.test.js`)**
+
+Se verifican las siguientes operaciones:
+
+- Obtener todos los usuarios.
+- Obtener una lista vacía cuando no existen registros.
+- Crear un usuario correctamente.
+- Rechazar datos incompletos.
+- Rechazar usuarios duplicados.
+- Obtener un usuario por ID.
+- Manejar usuarios inexistentes.
+- Actualizar un usuario.
+- Eliminar un usuario.
+- Verificar que el usuario eliminado ya no exista.
+
+**Órdenes (`tests/orders/order.test.js`)**
+
+Se verifican las siguientes operaciones:
+
+- Obtener todas las órdenes.
+- Obtener una lista vacía cuando no existen registros.
+- Crear una orden válida asociada a un usuario.
+- Rechazar órdenes con datos incompletos.
+- Obtener una orden por ID.
+- Manejar órdenes inexistentes.
+- Actualizar el estado de una orden.
+- Rechazar estados inválidos.
+- Eliminar una orden.
+- Verificar que la orden eliminada ya no exista.
+
+**Mocking (`tests/mocks/mock.test.js`)**
+
+Se verifican las siguientes funcionalidades:
+
+- Generar usuarios simulados.
+- Generar repartidores simulados.
+- Validar la estructura de los datos generados.
+- Rechazar cantidades iguales a cero.
+- Rechazar cantidades superiores al máximo permitido.
+- Verificar que los mocks generados no se persistan cuando corresponde.
+- Insertar datos de prueba mediante el endpoint seed.
+- Comprobar las cantidades de usuarios, clientes, repartidores, órdenes y entregas insertadas.
+- Rechazar cantidades inválidas y valores decimales.
+
+**Logger (`tests/logger/logger.test.js`)**
+
+Se verifica el endpoint:
+
+```http
+GET /api/logger/test
+```
+
+Se comprueba que responda correctamente y devuelva una estructura de respuesta exitosa con un mensaje.
+
+**Swagger (`tests/docs/swagger.test.js`)**
+
+Se verifica el acceso a la documentación interactiva mediante:
+
+```http
+GET /api-docs/
+```
+
+Se comprueba que el endpoint responda con estado HTTP 200 y contenido HTML correspondiente a Swagger UI.
+
+### Validaciones realizadas
+
+Las pruebas comprueban tanto los casos exitosos como los casos de error.
+
+Entre las validaciones realizadas se encuentran:
+
+- Códigos de estado HTTP.
+- Estructura de las respuestas.
+- Mensajes y códigos de error.
+- Datos devueltos por los endpoints.
+- Recursos inexistentes.
+- Datos incompletos.
+- Estados inválidos.
+- Cantidades de mocks incorrectas.
+- Persistencia y eliminación de registros.
+
+### Base de datos de testing
+
+Las pruebas utilizan una base de datos independiente:
+
+```text
+shipnow_test
+```
+
+No se utiliza la base de datos de desarrollo para evitar modificar información del proyecto durante la ejecución de los tests.
+
+Además, las colecciones se limpian antes de cada prueba para mantener resultados controlados y repetibles.
+
+### Resultado de las pruebas
+
+La suite de pruebas funcionales se ejecutó correctamente.
+
+```text
+35 passing
+0 failing
+```
+
+También se ejecutó la suite completa dos veces consecutivas, obteniendo resultados satisfactorios en ambas ejecuciones.
+
+Esto permite comprobar que las pruebas no dependen de datos residuales de ejecuciones anteriores.
+
+---
+
+# 📚 Documentación de la API con Swagger
 
 ShipNow utiliza **Swagger (OpenAPI)** para documentar los endpoints de la API REST y facilitar su exploración y prueba.
 
 La documentación interactiva permite consultar las rutas disponibles, conocer los parámetros requeridos, visualizar los formatos de respuesta y ejecutar solicitudes HTTP directamente desde la interfaz de Swagger UI.
 
-### 🚀 Acceso a la documentación
+### Acceso a la documentación
 
-Una vez iniciado el servidor, accede a la siguiente dirección:
+Una vez iniciado el servidor, acceder a:
 
 ```text
 http://localhost:3000/api-docs
 ```
 
-> **Nota:** El servidor debe estar en ejecución para acceder a la documentación. Si configuraste otro puerto mediante variables de entorno, reemplaza `3000` por el puerto correspondiente.
+El servidor debe estar en ejecución para acceder a la documentación. Si se configuró otro puerto mediante variables de entorno, reemplazar `3000` por el puerto correspondiente.
 
-### 🛠️ Funcionalidades documentadas
-
-La documentación está organizada por categorías para facilitar la navegación:
+### Funcionalidades documentadas
 
 | Categoría | Descripción |
 |---|---|
-| **Users** | Operaciones relacionadas con usuarios. |
-| **Products** | Operaciones relacionadas con los productos de ShipNow. |
-| **Orders** | Consulta y gestión de pedidos. |
-| **Deliveries** | Consulta y gestión de entregas, asignación de conductores y actualización de estados y prioridades. |
-| **Mocks** | Generación de datos ficticios e inserción de datos de prueba en la base de datos. |
-| **Logger** | Pruebas de los niveles de logging configurados en la aplicación. |
+| Users | Operaciones relacionadas con usuarios |
+| Products | Operaciones relacionadas con productos |
+| Orders | Consulta y gestión de pedidos |
+| Deliveries | Consulta y gestión de entregas, asignación de conductores y actualización de estados y prioridades |
+| Mocks | Generación de datos ficticios e inserción de datos de prueba |
+| Logger | Pruebas de los niveles de logging configurados en la aplicación |
 
-### 🧪 Cómo probar los endpoints
+### Cómo probar los endpoints
 
-1. Inicia el servidor de ShipNow.
-2. Abre Swagger UI en `http://localhost:3000/api-docs`.
-3. Selecciona la categoría del endpoint que deseas probar.
-4. Expande la operación HTTP correspondiente.
-5. Haz clic en **Try it out**.
-6. Completa los parámetros requeridos.
-7. Haz clic en **Execute** para enviar la solicitud.
-8. Revisa el código HTTP, los encabezados y el cuerpo de la respuesta.
+1. Iniciar el servidor de ShipNow.
+2. Abrir Swagger UI en `http://localhost:3000/api-docs`.
+3. Seleccionar la categoría del endpoint que se desea probar.
+4. Expandir la operación HTTP correspondiente.
+5. Hacer clic en **Try it out**.
+6. Completar los parámetros requeridos.
+7. Hacer clic en **Execute** para enviar la solicitud.
+8. Revisar el código HTTP, los encabezados y el cuerpo de la respuesta.
 
-### ⚠️ Consideraciones
+### Consideraciones
 
 - Los ejemplos y esquemas de respuesta describen el comportamiento esperado de cada endpoint.
 - Los resultados reales dependen de los datos disponibles y de la implementación del backend.
-- El endpoint `POST /api/mocks/seed` inserta datos en la base de datos; úsalo con precaución.
+- El endpoint `POST /api/mocks/seed` inserta datos en la base de datos; utilizarlo con precaución.
 - El endpoint `GET /api/logger/test` ejecuta mensajes de prueba en los niveles de logging configurados.
+
+---
 
 # ▶️ Ejecutar el proyecto
 
@@ -360,7 +620,7 @@ Los roles se encuentran centralizados mediante constantes inmutables:
 USER_ROLE
 ```
 
-Ejemplo:
+Ejemplos:
 
 ```js
 USER_ROLE.ADMIN
@@ -390,7 +650,7 @@ Los estados de producto se encuentran centralizados mediante:
 PRODUCT_STATUS
 ```
 
-Ejemplo:
+Ejemplos:
 
 ```js
 PRODUCT_STATUS.AVAILABLE
@@ -410,7 +670,7 @@ GET /api/products?status=available
 
 # 🛵 Órdenes y entregas
 
-El proyecto también cuenta con módulos para la gestión de órdenes y entregas:
+El proyecto cuenta con módulos para la gestión de órdenes y entregas:
 
 ```http
 /api/orders
@@ -447,10 +707,9 @@ Los módulos de mocking se encuentran separados de las rutas:
 
 ```text
 src/mocks/
-
 ├── user.mocks.js
 ├── order.mocks.js
-└── delivery.mocks.js
+└── delvery.mocks.js
 ```
 
 La lógica de coordinación se encuentra en:
@@ -459,13 +718,11 @@ La lógica de coordinación se encuentra en:
 src/services/mock.service.js
 ```
 
-Y las rutas específicas en:
+Las rutas específicas se encuentran en:
 
 ```text
-src/routes/mock.routes.js
+src/routes/mock.js
 ```
-
----
 
 ## 👤 Generación de usuarios
 
@@ -477,7 +734,7 @@ GET /api/mocks/users?qty=10
 
 Genera usuarios simulados sin almacenarlos en MongoDB.
 
-Ejemplo:
+Ejemplo de respuesta:
 
 ```json
 {
@@ -490,13 +747,6 @@ Ejemplo:
       "email": "Barry_Ziemann@hotmail.com",
       "role": "customer",
       "password": "coder123"
-    },
-    {
-      "firstName": "Grady",
-      "lastName": "Adams",
-      "email": "Grady.Adams@yahoo.com",
-      "role": "driver",
-      "password": "coder123"
     }
   ]
 }
@@ -505,8 +755,6 @@ Ejemplo:
 Este endpoint solamente genera los datos y no los persiste.
 
 Los roles utilizados provienen de las constantes del proyecto.
-
----
 
 ## 🛵 Generación de repartidores
 
@@ -524,26 +772,6 @@ driver
 
 Los registros generados no se almacenan en MongoDB.
 
-Ejemplo:
-
-```json
-{
-  "status": "success",
-  "count": 1,
-  "data": [
-    {
-      "firstName": "Dena",
-      "lastName": "Adams",
-      "email": "dena_adams7@gmail.com",
-      "role": "driver",
-      "password": "coder123"
-    }
-  ]
-}
-```
-
----
-
 ## 🌱 Seed de datos de prueba
 
 Endpoint:
@@ -556,18 +784,12 @@ El endpoint genera e inserta datos de prueba en MongoDB.
 
 Por cada cantidad solicitada se generan:
 
-* Un customer.
-* Un driver.
-* Un order.
-* Una delivery.
+- Un customer.
+- Un driver.
+- Un order.
+- Una delivery.
 
-Ejemplo:
-
-```http
-POST /api/mocks/seed?qty=3
-```
-
-Puede generar:
+Ejemplo de respuesta:
 
 ```json
 {
@@ -718,15 +940,12 @@ errorHandler
 HTTP Response
 ```
 
----
-
 ## 📁 Estructura de errores
 
 Los errores se encuentran centralizados en:
 
 ```text
 src/errors/
-
 ├── CustomError.js
 └── errorDictionary.js
 ```
@@ -743,17 +962,15 @@ Los tipos de error se encuentran centralizados junto con las constantes del domi
 src/constants/index.js
 ```
 
----
-
 ## 🧩 Tipos de error
 
-Actualmente se encuentran definidos los siguientes tipos:
+Los tipos de error se encuentran definidos mediante:
 
 ```js
 ERROR_TYPES
 ```
 
-Incluye:
+Incluyen:
 
 ```text
 USER_NOT_FOUND
@@ -769,8 +986,6 @@ DATABASE_ERROR
 
 De esta manera se evita utilizar strings de error repetidos en diferentes partes de la aplicación.
 
----
-
 ## 🗂️ Diccionario de errores
 
 El archivo:
@@ -783,9 +998,9 @@ centraliza la información asociada a cada tipo de error.
 
 Cada error define:
 
-* Código interno.
-* Status HTTP.
-* Mensaje por defecto.
+- Código interno.
+- Status HTTP.
+- Mensaje por defecto.
 
 Ejemplo:
 
@@ -807,9 +1022,7 @@ Otro ejemplo:
 
 Esto permite mantener respuestas consistentes en toda la API.
 
----
-
-# 🛠️ CustomError
+## 🛠️ CustomError
 
 El archivo:
 
@@ -832,14 +1045,12 @@ throw CustomError.createError({
 
 El `CustomError` obtiene automáticamente desde el diccionario:
 
-* El status HTTP.
-* El mensaje correspondiente.
+- El status HTTP.
+- El mensaje correspondiente.
 
 También permite agregar información adicional mediante `cause`.
 
----
-
-# 🌐 Middleware global de errores
+## 🌐 Middleware global de errores
 
 El middleware:
 
@@ -858,12 +1069,10 @@ app.use(errorHandler);
 Esto permite que los errores propagados mediante:
 
 ```js
-next(error)
+next(error);
 ```
 
 sean recibidos por una única capa.
-
----
 
 ## 📋 Formato de respuesta de error
 
@@ -935,11 +1144,7 @@ INVALID_STATUS
 VALIDATION_ERROR
 ```
 
-Por ejemplo, una operación de delivery puede generar un error si intenta ejecutarse en un estado no permitido:
-
-```text
-INVALID_STATUS
-```
+Por ejemplo, una operación de delivery puede generar un error si intenta ejecutarse en un estado no permitido.
 
 Esto permite centralizar las reglas relacionadas con el flujo de estados.
 
@@ -949,7 +1154,7 @@ Esto permite centralizar las reglas relacionadas con el flujo de estados.
 
 El sistema de mocking también utiliza el manejo centralizado de errores.
 
-## Cantidad inválida
+### Cantidad inválida
 
 Las cantidades se validan antes de generar datos.
 
@@ -957,13 +1162,7 @@ Ejemplos:
 
 ```http
 GET /api/mocks/users?qty=0
-```
-
-```http
 GET /api/mocks/users?qty=-5
-```
-
-```http
 GET /api/mocks/users?qty=51
 ```
 
@@ -973,15 +1172,13 @@ Estos casos generan:
 INVALID_QUANTITY
 ```
 
-con status HTTP:
+Con status HTTP:
 
 ```text
 400 Bad Request
 ```
 
----
-
-## Error durante la generación
+### Error durante la generación
 
 Los errores producidos durante la generación de usuarios y drivers son transformados en:
 
@@ -989,15 +1186,13 @@ Los errores producidos durante la generación de usuarios y drivers son transfor
 MOCK_GENERATION_ERROR
 ```
 
-con status:
+Con status:
 
 ```text
 500 Internal Server Error
 ```
 
----
-
-## Error durante la persistencia
+### Error durante la persistencia
 
 Los errores producidos durante la carga de datos mock en MongoDB son transformados en:
 
@@ -1005,7 +1200,7 @@ Los errores producidos durante la carga de datos mock en MongoDB son transformad
 MOCK_DATABASE_ERROR
 ```
 
-con status:
+Con status:
 
 ```text
 500 Internal Server Error
@@ -1031,8 +1226,6 @@ Resultado esperado:
 200 OK
 ```
 
----
-
 ### Cantidad igual a cero
 
 ```http
@@ -1050,8 +1243,6 @@ Error:
 ```text
 INVALID_QUANTITY
 ```
-
----
 
 ### Cantidad negativa
 
@@ -1071,8 +1262,6 @@ Error:
 INVALID_QUANTITY
 ```
 
----
-
 ### Cantidad superior al máximo
 
 ```http
@@ -1090,8 +1279,6 @@ Error:
 ```text
 INVALID_QUANTITY
 ```
-
----
 
 ### ID con formato inválido — Usuario
 
@@ -1113,8 +1300,6 @@ VALIDATION_ERROR
 
 El middleware global detecta el `CastError` de Mongoose y lo transforma en una respuesta controlada.
 
----
-
 ### ID con formato inválido — Orden
 
 ```http
@@ -1132,8 +1317,6 @@ Error:
 ```text
 VALIDATION_ERROR
 ```
-
----
 
 ### ID con formato inválido — Delivery
 
@@ -1186,7 +1369,7 @@ src/services/logger.service.js
 El proyecto utiliza los siguientes niveles:
 
 | Nivel | Uso |
-| --- | --- |
+|---|---|
 | `debug` | Información detallada para desarrollo y diagnóstico |
 | `http` | Eventos relacionados con solicitudes HTTP |
 | `info` | Eventos normales y operaciones exitosas |
@@ -1319,24 +1502,6 @@ Winston
 Console + archivos de log
 ```
 
-### 🌎 Comportamiento según el entorno
-
-La configuración del logger utiliza la variable de entorno `NODE_ENV`.
-
-- **Desarrollo (`NODE_ENV=development`):** se registran los niveles desde `debug` en adelante, incluyendo mensajes detallados útiles para las pruebas y la depuración.
-- **Producción y otros entornos:** los transportes de consola y del archivo general registran desde `info` en adelante, reduciendo el volumen de mensajes de diagnóstico.
-
-El archivo de errores mantiene un transporte independiente configurado desde el nivel `error`, por lo que registra los eventos `error` y `fatal`.
-
-### 📁 Persistencia y rotación de logs
-
-Los registros se guardan en el directorio `logs/`, que se crea o utiliza durante la ejecución de la aplicación.
-
-- `logs/combined-YYYY-MM-DD.log`: contiene los eventos que superan el nivel mínimo configurado para el entorno.
-- `logs/error-YYYY-MM-DD.log`: contiene los eventos de nivel `error` y `fatal`.
-
-La rotación es diaria. Se conservan los archivos generales durante 14 días y los archivos de errores durante 30 días, según la configuración de `winston-daily-rotate-file`.
-
 ## 🔒 Archivos excluidos de Git
 
 Los archivos generados durante la ejecución no deben subirse al repositorio.
@@ -1344,9 +1509,10 @@ Los archivos generados durante la ejecución no deben subirse al repositorio.
 El `.gitignore` incluye:
 
 ```gitignore
-/node_modules
-/logs
+/node_modules/
+/logs/
 .env
+.env.test
 ```
 
 De esta manera se evita versionar:
@@ -1354,6 +1520,8 @@ De esta manera se evita versionar:
 - Dependencias instaladas.
 - Logs generados.
 - Variables de entorno y credenciales locales.
+
+Los archivos `.env.example` y `.env.test.example` se mantienen como referencia de configuración.
 
 ---
 
@@ -1389,19 +1557,19 @@ La separación permite que cada capa tenga una responsabilidad específica.
 
 El **Repository** se ocupa exclusivamente del acceso a datos. Por ejemplo:
 
-* Consultas.
-* Filtros.
-* Proyecciones.
-* `populate`.
-* Operaciones de persistencia.
+- Consultas.
+- Filtros.
+- Proyecciones.
+- `populate`.
+- Operaciones de persistencia.
 
 El **Service** se ocupa de:
 
-* Reglas de negocio.
-* Validaciones.
-* Comprobaciones previas.
-* Coordinación entre repositories.
-* Manejo de errores de dominio.
+- Reglas de negocio.
+- Validaciones.
+- Comprobaciones previas.
+- Coordinación entre repositories.
+- Manejo de errores de dominio.
 
 De esta manera, el Controller no necesita conocer cómo se almacenan los datos y el Repository no necesita conocer las reglas de negocio.
 
@@ -1434,11 +1602,11 @@ Con el sistema implementado, los errores siguen una estructura común:
 
 Esto facilita:
 
-* El mantenimiento.
-* La depuración.
-* La integración con clientes frontend.
-* La identificación de errores.
-* La evolución futura de la API.
+- El mantenimiento.
+- La depuración.
+- La integración con clientes frontend.
+- La identificación de errores.
+- La evolución futura de la API.
 
 ---
 
@@ -1496,18 +1664,20 @@ El middleware global se encarga de transformar el error en una respuesta HTTP un
 
 # 🔒 Seguridad y buenas prácticas
 
-* Las variables de entorno no se almacenan en Git.
-* `.env` está incluido en `.gitignore`.
-* Se proporciona `.env.example` sin valores reales.
-* Los Controllers no acceden directamente a Mongoose.
-* Los Services contienen la lógica de negocio.
-* Los Repositories encapsulan el acceso a MongoDB.
-* Los valores del dominio se centralizan mediante constantes.
-* Los tipos de error se centralizan mediante `ERROR_TYPES`.
-* Los errores de negocio utilizan `CustomError`.
-* Los errores se procesan mediante un middleware global.
-* Los modelos se utilizan para definir los esquemas de Mongoose.
-* Las respuestas de error mantienen una estructura uniforme.
+- Las variables de entorno no se almacenan en Git.
+- `.env` y `.env.test` están incluidos en `.gitignore`.
+- Se proporcionan `.env.example` y `.env.test.example` sin credenciales reales.
+- Los Controllers no acceden directamente a Mongoose.
+- Los Services contienen la lógica de negocio.
+- Los Repositories encapsulan el acceso a MongoDB.
+- Los valores del dominio se centralizan mediante constantes.
+- Los tipos de error se centralizan mediante `ERROR_TYPES`.
+- Los errores de negocio utilizan `CustomError`.
+- Los errores se procesan mediante un middleware global.
+- Los modelos se utilizan para definir los esquemas de Mongoose.
+- Las respuestas de error mantienen una estructura uniforme.
+- Las pruebas funcionales utilizan una base de datos independiente.
+- La base de datos de testing se limpia antes de cada prueba.
 
 ---
 
@@ -1517,71 +1687,90 @@ La implementación incluye:
 
 ### Arquitectura
 
-* ✅ Arquitectura Controller-Service-Repository.
-* ✅ Separación de Routes, Controllers, Services y Repositories.
-* ✅ Acceso a MongoDB encapsulado en Repositories.
-* ✅ Configuración de entorno centralizada.
-* ✅ Validación de variables de entorno.
-* ✅ Constantes inmutables.
-* ✅ `.env.example`.
-* ✅ `.gitignore`.
+- ✅ Arquitectura Controller-Service-Repository.
+- ✅ Separación de Routes, Controllers, Services y Repositories.
+- ✅ Acceso a MongoDB encapsulado en Repositories.
+- ✅ Configuración de entorno centralizada.
+- ✅ Validación de variables de entorno.
+- ✅ Constantes inmutables.
+- ✅ `.env.example`.
+- ✅ `.gitignore`.
 
 ### Mocking
 
-* ✅ Sistema de mocking con Faker.
-* ✅ Mocking de usuarios.
-* ✅ Mocking de repartidores.
-* ✅ Mocking de órdenes.
-* ✅ Mocking de entregas.
-* ✅ Router específico `/api/mocks`.
-* ✅ Endpoint de generación sin persistencia.
-* ✅ Endpoint de seed para carga controlada.
-* ✅ Relaciones entre usuarios, órdenes y entregas.
-* ✅ Validación de cantidades.
-* ✅ Validación de cantidades negativas.
-* ✅ Validación de cantidades superiores al máximo.
-* ✅ Contraseñas persistidas mediante bcrypt.
+- ✅ Sistema de mocking con Faker.
+- ✅ Mocking de usuarios.
+- ✅ Mocking de repartidores.
+- ✅ Mocking de órdenes.
+- ✅ Mocking de entregas.
+- ✅ Router específico `/api/mocks`.
+- ✅ Endpoint de generación sin persistencia.
+- ✅ Endpoint de seed para carga controlada.
+- ✅ Relaciones entre usuarios, órdenes y entregas.
+- ✅ Validación de cantidades.
+- ✅ Validación de cantidades negativas.
+- ✅ Validación de cantidades superiores al máximo.
+- ✅ Contraseñas persistidas mediante bcrypt.
 
-### Manejo profesional de errores**
+### Manejo profesional de errores
 
-* ✅ Capa centralizada de errores.
-* ✅ \`CustomError\`.
-* ✅ \`errorDictionary\`.
-* ✅ \`ERROR_TYPES\`.
-* ✅ Middleware global \`errorHandler\`.
-* ✅ Propagación de errores mediante \`next(error)\`.
-* ✅ Errores de usuario inexistente.
-* ✅ Errores de orden inexistente.
-* ✅ Errores de delivery inexistente.
-* ✅ Errores de estados inválidos.
-* ✅ Errores de validación.
-* ✅ Errores de cantidad inválida.
-* ✅ Errores de generación de mocks.
-* ✅ Errores de persistencia de mocks.
-* ✅ Manejo controlado de \`CastError\` de Mongoose.
-* ✅ Respuestas de error uniformes.
-* ✅ Pruebas de casos inválidos.
+- ✅ Capa centralizada de errores.
+- ✅ `CustomError`.
+- ✅ `errorDictionary`.
+- ✅ `ERROR_TYPES`.
+- ✅ Middleware global `errorHandler`.
+- ✅ Propagación de errores mediante `next(error)`.
+- ✅ Errores de usuario inexistente.
+- ✅ Errores de orden inexistente.
+- ✅ Errores de delivery inexistente.
+- ✅ Errores de estados inválidos.
+- ✅ Errores de validación.
+- ✅ Errores de cantidad inválida.
+- ✅ Errores de generación de mocks.
+- ✅ Errores de persistencia de mocks.
+- ✅ Manejo controlado de `CastError` de Mongoose.
+- ✅ Respuestas de error uniformes.
+- ✅ Pruebas de casos inválidos.
 
+### Logging y monitoreo básico
 
-### Logging y monitoreo básico**
+- ✅ Winston como sistema centralizado de logging.
+- ✅ Niveles `debug`, `http`, `info`, `warning`, `error` y `fatal`.
+- ✅ Configuración centralizada del logger.
+- ✅ Comportamiento según `NODE_ENV`.
+- ✅ Registro de inicio del servidor.
+- ✅ Registro de conexión a MongoDB.
+- ✅ Registro de generación de mocks.
+- ✅ Registro de seed.
+- ✅ Registro de cantidades inválidas.
+- ✅ Registro de rutas inexistentes.
+- ✅ Integración con `errorHandler`.
+- ✅ Persistencia de logs en archivos.
+- ✅ Rotación diaria de logs.
+- ✅ Archivo de errores separado.
+- ✅ Endpoint `/api/logger/test`.
+- ✅ Directorio `logs/` excluido mediante `.gitignore`.
+- ✅ `node_modules/` excluido mediante `.gitignore`.
 
-* ✅ Winston como sistema centralizado de logging.
-* ✅ Niveles `debug`, `http`, `info`, `warning`, `error` y `fatal`.
-* ✅ Configuración centralizada del logger.
-* ✅ Comportamiento según `NODE_ENV`.
-* ✅ Registro de inicio del servidor.
-* ✅ Registro de conexión a MongoDB.
-* ✅ Registro de generación de mocks.
-* ✅ Registro de seed.
-* ✅ Registro de cantidades inválidas.
-* ✅ Registro de rutas inexistentes.
-* ✅ Integración con `errorHandler`.
-* ✅ Persistencia de logs en archivos.
-* ✅ Rotación diaria de logs.
-* ✅ Archivo de errores separado.
-* ✅ Endpoint `/api/logger/test`.
-* ✅ Directorio `logs/` excluido mediante `.gitignore`.
-* ✅ `node_modules/` excluido mediante `.gitignore`.
+### Testing funcional
+
+- ✅ Instalación y configuración de Mocha.
+- ✅ Configuración de Chai.
+- ✅ Integración de Supertest.
+- ✅ Script `npm test`.
+- ✅ Separación entre `app.js` y `server.js`.
+- ✅ Entorno de testing independiente.
+- ✅ Base de datos exclusiva `shipnow_test`.
+- ✅ Limpieza de colecciones antes de cada prueba.
+- ✅ Cierre de conexión al finalizar los tests.
+- ✅ Pruebas funcionales de usuarios.
+- ✅ Pruebas funcionales de órdenes.
+- ✅ Pruebas de generación y persistencia de mocks.
+- ✅ Pruebas del endpoint del logger.
+- ✅ Pruebas de acceso a Swagger.
+- ✅ Validación de respuestas exitosas y errores.
+- ✅ Ejecución repetida de la suite completa.
+- ✅ 35 pruebas aprobadas.
 
 ---
 

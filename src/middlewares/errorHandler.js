@@ -10,10 +10,13 @@ const errorHandler = (error, req, res, next) => {
   }
 
   const isCastError = error.name === "CastError";
+  
+   const isValidationError = error.name === "ValidationError";
+   const isMongooseValidationError = isCastError || isValidationError;
 
   const errorData = ERROR_DICTIONARY[error.name];
 
-  const status = isCastError
+  const status = isMongooseValidationError
     ? 400
     : error.status || errorData?.status || 500;
 
@@ -46,7 +49,7 @@ const errorHandler = (error, req, res, next) => {
 
   return res.status(status).json({
     status: "error",
-    error: isCastError
+    error: isMongooseValidationError
       ? ERROR_TYPES.VALIDATION_ERROR
       : error.name || "INTERNAL_SERVER_ERROR",
     message,
