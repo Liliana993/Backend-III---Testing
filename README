@@ -1,8 +1,8 @@
-# 🚚 ShipNow API — Pre-entrega Módulo 6
+# 🚚 ShipNow API — Pre-entrega Módulo 7
 
 API REST para la gestión de usuarios, productos, órdenes y entregas de ShipNow.
 
-Esta versión corresponde a la **Pre-entrega del Módulo 6 — Testing funcional**, incorporando pruebas automatizadas de integración y funcionalidad mediante **Mocha, Chai y Supertest**.
+Esta versión corresponde a la Entrega 7, incorporando un sistema de carga y almacenamiento de archivos mediante Multer, con validaciones, manejo centralizado de errores y pruebas automatizadas. Se mantienen las funcionalidades y la arquitectura desarrolladas en los módulos anteriores.
 
 El proyecto mantiene la arquitectura por capas desarrollada en los módulos anteriores e integra los siguientes componentes:
 
@@ -226,11 +226,97 @@ ShipNow/
 - Express.js
 - MongoDB
 - Mongoose
+ -Multer
+ -Mocha
+ -Chai
+ -Supertest
+ -Winston
 - Faker
 - bcrypt
 - dotenv
 - CORS
+-Swagger
 - JavaScript ES Modules
+
+# 📤 Carga de archivos con Multer
+En la Entrega 7 se incorpora Multer para gestionar la carga de archivos mediante formularios multipart/form-data.
+
+La configuración se encuentra centralizada en:
+src/config/multer.config.js
+El middleware encargado de validar los archivos se encuentra en:
+src/middlewares/upload.middleware.js
+Tipos de archivos permitidos
+- PDF
+- JPG
+- JPEG
+- PNG
+Restricciones de carga
+Validación	Límite
+Tamaño máximo por archivo	5 MB
+Cantidad máxima de comprobantes por solicitud	5 archivos
+Formatos permitidos	PDF, JPG, JPEG, PNG
+
+
+Los archivos se almacenan en el sistema de archivos local y se generan nombres únicos para evitar conflictos.
+Documentos de usuarios
+Endpoint:
+POST /api/users/:id/documents
+Permite cargar documentación asociada a un usuario existente.
+Campo	Descripción
+document	Archivo que se desea cargar.
+documentType	Tipo de documento: DNI, LICENSE u OTHER.
+
+
+Directorios de almacenamiento:
+uploads/users/documents/
+uploads/users/licenses/
+Comprobantes de entregas
+Endpoint:
+POST /api/deliveries/:id/proofs
+Permite cargar uno o varios comprobantes asociados a una entrega existente.
+Campo	Descripción
+proof	Uno o varios archivos de comprobantes.
+
+
+Se admiten hasta cinco archivos por solicitud.
+
+Directorio de almacenamiento:
+uploads/deliveries/proofs/
+Almacenamiento de metadatos
+Los archivos se guardan físicamente en el servidor, mientras que MongoDB almacena sus metadatos. Los modelos mantienen información sobre los archivos sin almacenar directamente su contenido binario.
+Manejo de errores
+La implementación contempla:
+- Archivo obligatorio.
+- Tipo de archivo no permitido.
+- Tamaño máximo excedido.
+- Campo de archivo incorrecto.
+- Tipo de documento inválido.
+- Usuario o entrega inexistente.
+- Error durante el almacenamiento del archivo.
+Los errores se procesan mediante el middleware centralizado y el diccionario de errores de la aplicación.
+
+Si ocurre un error durante el proceso, se realiza la limpieza de los archivos físicos correspondientes para evitar archivos huérfanos.
+
+# 🔐 Configuración del entorno
+El proyecto utiliza variables de entorno para centralizar la configuración.
+
+Los archivos .env y .env.test contienen información local y no deben subirse al repositorio.
+
+Se incluyen archivos de ejemplo:
+- .env.example: configuración del entorno de ejecución.
+- .env.test.example: configuración del entorno de pruebas.
+Configuración de desarrollo
+Crear el archivo .env a partir del ejemplo:
+cp .env.example .env
+Completar las variables de entorno con los valores correspondientes.
+Configuración de testing
+Crear el archivo .env.test:
+cp .env.test.example .env.test
+Configurar la conexión a una base de datos exclusiva para pruebas.
+
+La base de datos utilizada para testing es:
+shipnow_test
+Importante: no utilizar la base de datos de desarrollo o producción para ejecutar las pruebas automatizadas.
 
 ### Documentación
 
