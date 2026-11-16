@@ -109,6 +109,57 @@ class UserService {
 
     return await userRepository.deleteById(id);
   }
+
+
+  // Método para agregar un documento a un usuario
+async addUserDocument(id, file, documentType) {
+  try {
+    const allowedTypes = ["DNI", "LICENSE", "OTHER"];
+
+    if (!allowedTypes.includes(documentType)) {
+      throw CustomError.createError({
+        name: ERROR_TYPES.INVALID_DOCUMENT_TYPE,
+        cause: `Tipo recibido: ${documentType}`
+      });
+    }
+
+    await this.getUserById(id);
+
+    const documentData = {
+      originalName: file.originalname,
+      filename: file.filename,
+      path: `uploads/users/documents/${file.filename}`,
+      mimetype: file.mimetype,
+      size: file.size,
+      documentType,
+      uploadedAt: new Date()
+    };
+
+    const updatedUser = await userRepository.addDocument(
+      id,
+      documentData
+    );
+
+    if (!updatedUser) {
+      throw CustomError.createError({
+        name: ERROR_TYPES.USER_NOT_FOUND,
+        cause: `No existe un usuario con id ${id}`
+      });
+    }
+
+    return updatedUser;
+
+  } catch (error) {
+    // Si falla la validación o el guardado, eliminamos el archivo.
+    if (file?.path) {
+      const fs = await import("fs/promises");
+      await fs.unlink(file.path).catch(() => {});
+    }
+
+    throw error;
+  }
+}
+
 }
 
 export default new UserService();

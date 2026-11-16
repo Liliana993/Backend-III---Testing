@@ -36,18 +36,41 @@ const userSchema = new mongoose.Schema(
     },
 
     documents: {
-      type: [
-        {
-          name: {
-            type: String
-          },
-          reference: {
-            type: String
-          }
-        }
-      ],
-      default: []
-    },
+  type: [
+    {
+      originalName: {
+        type: String,
+        required: true
+      },
+      filename: {
+        type: String,
+        required: true
+      },
+      path: {
+        type: String,
+        required: true
+      },
+      mimetype: {
+        type: String,
+        required: true
+      },
+      size: {
+        type: Number,
+        required: true
+      },
+      documentType: {
+        type: String,
+        enum: ["DNI", "LICENSE", "OTHER"],
+        required: true
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ],
+  default: []
+},
     isAvailable: {
     type: Boolean,
     default: true

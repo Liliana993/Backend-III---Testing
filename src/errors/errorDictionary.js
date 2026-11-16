@@ -28,7 +28,7 @@ const ERROR_DICTIONARY = {
 
   [ERROR_TYPES.INVALID_QUANTITY]: {
     status: 400,
-    message: "La cantidad debe ser un número entero positivo entre 1 y 50"
+    message: "La cantidad debe ser un número entero entre 1 y 50."
   },
 
   [ERROR_TYPES.MOCK_GENERATION_ERROR]: {
@@ -63,6 +63,36 @@ const ERROR_DICTIONARY = {
   [ERROR_TYPES.DELIVERY_ALREADY_EXISTS]: {
     status: 409,
     message: "Ya existe una entrega para este pedido"
+  },
+
+    [ERROR_TYPES.FILE_REQUIRED]: {
+    status: 400,
+    message: "El archivo es obligatorio"
+  },
+
+  [ERROR_TYPES.INVALID_FILE_TYPE]: {
+    status: 400,
+    message: "Tipo de archivo no permitido"
+  },
+
+  [ERROR_TYPES.FILE_TOO_LARGE]: {
+    status: 413,
+    message: "El archivo supera el tamaño máximo permitido"
+  },
+
+  [ERROR_TYPES.INVALID_FILE_FIELD]: {
+    status: 400,
+    message: "El campo de archivo enviado no es válido"
+  },
+
+  [ERROR_TYPES.INVALID_DOCUMENT_TYPE]: {
+    status: 400,
+    message: "Tipo de documento inválido"
+  },
+
+  [ERROR_TYPES.FILE_UPLOAD_ERROR]: {
+    status: 500,
+    message: "Error al guardar el archivo"
   }
 };
 

@@ -1,4 +1,5 @@
 
+import { unlink } from "node:fs/promises";
 import { describe, it } from "mocha";
 import { expect } from "chai";
 import request from "supertest";
@@ -24,7 +25,7 @@ describe("GET /api/users", function () {
     expect(response.body.payload).to.have.lengthOf(0);
   });
 
-
+});
 
 describe("POST /api/users", function () {
 
@@ -59,6 +60,8 @@ describe("POST /api/users", function () {
 
     expect(response.status).to.equal(400);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.equal("VALIDATION_ERROR");
+    expect(response.body.message).to.be.a("string").and.not.empty;
   });
 
   it("No debe permitir emails duplicados", async function () {
@@ -79,16 +82,15 @@ describe("POST /api/users", function () {
 
     expect(response.status).to.equal(400);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.be.a("string").and.not.empty;
+    expect(response.body.message).to.be.a("string").and.not.empty;
   });
 
 });
 
-
-
 describe("GET /api/users/:id", function () {
 
   it("Debe devolver un usuario cuando el ID existe", async function () {
-    // Primero creamos un usuario
     const createdUser = await request(app)
       .post("/api/users")
       .send({
@@ -100,7 +102,6 @@ describe("GET /api/users/:id", function () {
 
     const userId = createdUser.body.payload._id;
 
-    // Luego buscamos ese usuario por su ID
     const response = await request(app)
       .get(`/api/users/${userId}`);
 
@@ -116,15 +117,15 @@ describe("GET /api/users/:id", function () {
 
     expect(response.status).to.equal(404);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.equal("USER_NOT_FOUND");
+    expect(response.body.message).to.equal("Usuario no encontrado");
   });
 
 });
 
-
 describe("PUT /api/users/:id", function () {
 
   it("Debe actualizar un usuario correctamente", async function () {
-    // Creamos un usuario
     const createdUser = await request(app)
       .post("/api/users")
       .send({
@@ -136,7 +137,6 @@ describe("PUT /api/users/:id", function () {
 
     const userId = createdUser.body.payload._id;
 
-    // Actualizamos sus datos
     const response = await request(app)
       .put(`/api/users/${userId}`)
       .send({
@@ -157,16 +157,15 @@ describe("PUT /api/users/:id", function () {
 
     expect(response.status).to.equal(404);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.equal("USER_NOT_FOUND");
+    expect(response.body.message).to.equal("Usuario no encontrado");
   });
 
 });
 
-
-
 describe("DELETE /api/users/:id", function () {
 
   it("Debe eliminar un usuario correctamente", async function () {
-    // Creamos un usuario
     const createdUser = await request(app)
       .post("/api/users")
       .send({
@@ -178,14 +177,12 @@ describe("DELETE /api/users/:id", function () {
 
     const userId = createdUser.body.payload._id;
 
-    // Eliminamos el usuario
     const response = await request(app)
       .delete(`/api/users/${userId}`);
 
     expect(response.status).to.equal(200);
     expect(response.body.status).to.equal("success");
 
-    // Comprobamos que ya no existe
     const searchResponse = await request(app)
       .get(`/api/users/${userId}`);
 
@@ -198,9 +195,32 @@ describe("DELETE /api/users/:id", function () {
 
     expect(response.status).to.equal(404);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.equal("USER_NOT_FOUND");
+    expect(response.body.message).to.equal("Usuario no encontrado");
   });
 
 });
 
+it("Debe devolver 404 cuando el usuario no existe", async function () {
+  const nonExistentId = "000000000000000000000000";
 
+  const response = await request(app)
+    .post(`/api/users/${nonExistentId}/documents`)
+    .field("documentType", "DNI")
+    .attach(
+      "document",
+      Buffer.from("%PDF-1.4\nDocumento de prueba"),
+      {
+        filename: "documento.pdf",
+        contentType: "application/pdf"
+      }
+    );
+
+  expect(response.status).to.equal(404);
+  expect(response.body.status).to.equal("error");
+  expect(response.body.error).to.equal("USER_NOT_FOUND");
+  expect(response.body.message).to.equal("Usuario no encontrado");
+  expect(response.body.cause).to.equal(
+    `No existe un usuario con id ${nonExistentId}`
+  );
 });

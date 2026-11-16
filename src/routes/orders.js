@@ -224,7 +224,7 @@ router.post("/", orderController.create);
  *                 payload:
  *                   $ref: '#/components/schemas/Order'
  *       400:
- *         description: Identificador o datos de actualización inválidos
+ *         description: Datos de la solicitud inválidos
  *         content:
  *           application/json:
  *             schema:
@@ -233,7 +233,7 @@ router.post("/", orderController.create);
  *               status: error
  *               error: VALIDATION_ERROR
  *               message: Error de validación
- *               cause: El identificador o los datos proporcionados no son válidos
+ *               cause: customer, deliveryAddress e items son campos requerido
  *       404:
  *         description: Orden no encontrada
  *         content:
@@ -244,7 +244,7 @@ router.post("/", orderController.create);
  *               status: error
  *               error: ORDER_NOT_FOUND
  *               message: Pedido no encontrado
- *               cause: No existe una orden con el identificador proporcionado
+ *               cause: No existe un usuario con id 671a12345678901234567890
  *       500:
  *         description: Error interno del servidor
  *         content:
@@ -300,8 +300,8 @@ router.put("/:id", orderController.update);
  *             example:
  *               status: error
  *               error: VALIDATION_ERROR
- *               message: El identificador proporcionado no es válido
- *               cause: El identificador no tiene un formato válido
+ *               message: Validation failed: status: estado_invalido is not a valid enum value for path status.
+ *               cause: No se proporcionó información adicional
  *       404:
  *         description: Orden no encontrada
  *         content:

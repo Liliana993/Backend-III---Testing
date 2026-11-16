@@ -1,6 +1,14 @@
 import { Router } from "express";
 import deliveryController from "../controllers/delivery.controller.js";
 
+import upload from "../config/multer.config.js";
+import { MAX_FILES } from "../config/multer.config.js";
+
+import {
+  handleUploadError,
+  validateUploadedFiles
+} from "../middlewares/upload.middleware.js";
+
 const router = Router();
 
 /**
@@ -196,6 +204,20 @@ router.get("/order/:orderId", deliveryController.getByOrder);
  *               cause: No se pudieron obtener las entregas
  */
 router.get("/driver/:driverId", deliveryController.getByDriver);
+
+// Cargar comprobantes de una entrega
+router.post(
+  "/:id/proofs",
+  deliveryController.ensureExists,
+  (req, res, next) => {
+    req.uploadCategory = "deliveryProofs";
+    next();
+  },
+  upload.array("proof", MAX_FILES),
+  handleUploadError,
+  validateUploadedFiles,
+  deliveryController.uploadProofs
+);
 
 /**
  * @swagger
@@ -473,6 +495,170 @@ router.patch("/:id/assign", deliveryController.assignDriver);
  *               cause: No se pudo iniciar la entrega
  */
 router.patch("/:id/start", deliveryController.startDelivery);
+
+
+
+/**
+ * @swagger
+ * /api/deliveries/{id}/proofs:
+ *   post:
+ *     summary: Subir comprobantes de una entrega
+ *     description: Permite cargar hasta 5 comprobantes por entrega. Se aceptan archivos PDF, JPG, JPEG y PNG de hasta 5 MB cada uno.
+ *     tags: [Deliveries]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la entrega
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - proof
+ *             properties:
+ *               proof:
+ *                 type: array
+ *                 maxItems: 5
+ *                 description: Comprobantes de la entrega (máximo 5 archivos)
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Comprobantes cargados correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Comprobantes cargados correctamente
+ *                 payload:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     order:
+ *                       type: string
+ *                     driver:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     priority:
+ *                       type: string
+ *                     proofs:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           originalName:
+ *                             type: string
+ *                             example: comprobante.pdf
+ *                           filename:
+ *                             type: string
+ *                             example: 1730000000000-a1b2c3d4.pdf
+ *                           path:
+ *                             type: string
+ *                             example: uploads/deliveries/proofs/1730000000000-a1b2c3d4.pdf
+ *                           mimetype:
+ *                             type: string
+ *                             example: application/pdf
+ *                           size:
+ *                             type: number
+ *                             example: 245678
+ *                           uploadedAt:
+ *                             type: string
+ *                             format: date-time
+ *       400:
+ *         description: Error de validación de la carga
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 error:
+ *                   type: string
+ *                   enum:
+ *                     - FILE_REQUIRED
+ *                     - INVALID_FILE_TYPE
+ *                     - INVALID_FILE_FIELD
+ *                   example: FILE_REQUIRED
+ *                 message:
+ *                   type: string
+ *                   example: El archivo es obligatorio
+ *                 cause:
+ *                   type: string
+ *                   example: No se proporcionó información adicional
+ *       404:
+ *         description: Entrega no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 error:
+ *                   type: string
+ *                   example: DELIVERY_NOT_FOUND
+ *                 message:
+ *                   type: string
+ *                   example: Delivery no encontrado
+ *                 cause:
+ *                   type: string
+ *                   example: No se proporcionó información adicional
+ *       413:
+ *         description: Archivo demasiado grande
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 error:
+ *                   type: string
+ *                   example: FILE_TOO_LARGE
+ *                 message:
+ *                   type: string
+ *                   example: El archivo supera el tamaño máximo permitido
+ *                 cause:
+ *                   type: string
+ *                   example: No se proporcionó información adicional
+ *       500:
+ *         description: Error interno durante la carga
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 error:
+ *                   type: string
+ *                   example: FILE_UPLOAD_ERROR
+ *                 message:
+ *                   type: string
+ *                   example: Error al guardar el archivo
+ *                 cause:
+ *                   type: string
+ *                   example: No se proporcionó información adicional
+ */
 
 /**
  * @swagger

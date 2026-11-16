@@ -186,7 +186,7 @@ class DeliveryService {
     return updatedDelivery;
   }
 
-  async completeDelivery(deliveryId) {
+    async completeDelivery(deliveryId) {
     logger.debug("Iniciando finalización del delivery", {
       deliveryId,
     });
@@ -213,6 +213,55 @@ class DeliveryService {
 
     return updatedDelivery;
   }
+
+  // NUEVO MÉTODO: agregar comprobantes
+  async addDeliveryProofs(deliveryId, files) {
+    logger.debug("Iniciando carga de comprobantes", {
+      deliveryId,
+      count: files.length
+    });
+
+    try {
+      await this.getDeliveryById(deliveryId);
+
+      const proofs = files.map(file => ({
+        originalName: file.originalname,
+        filename: file.filename,
+        path: `uploads/deliveries/proofs/${file.filename}`,
+        mimetype: file.mimetype,
+        size: file.size,
+        uploadedAt: new Date()
+      }));
+
+      const updatedDelivery = await deliveryRepository.updateById(
+        deliveryId,
+        {
+          $push: {
+            proofs: {
+              $each: proofs
+            }
+          }
+        }
+      );
+
+      logger.info("Comprobantes cargados correctamente", {
+        deliveryId,
+        count: proofs.length
+      });
+
+      return updatedDelivery;
+
+    } catch (error) {
+      const fs = await import("fs/promises");
+
+      await Promise.all(
+        files.map(file => fs.unlink(file.path).catch(() => {}))
+      );
+
+      throw error;
+    }
+  }
+
 
   async updatePriority(deliveryId, priority) {
     logger.debug("Actualizando prioridad del delivery", {

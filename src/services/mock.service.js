@@ -17,22 +17,25 @@ import logger from "../config/logger.config.js";
 
 class MockService {
   validateQuantity(quantity) {
-    const parsedQuantity = Number(quantity);
+  const parsedQuantity = Number(quantity);
 
-    if (
-      !Number.isInteger(parsedQuantity) ||
-      parsedQuantity < 1 ||
-      parsedQuantity > MOCKING_PARAMETERS.MAX
-    ) {
-      logger.warning(`Cantidad inválida para mocks: ${quantity}. Debe ser un entero entre 1 y ${MOCKING_PARAMETERS.MAX}`);
-      throw CustomError.createError({
-        name: ERROR_TYPES.INVALID_QUANTITY,
-        cause: `La cantidad debe ser un número entero entre 1 y ${MOCKING_PARAMETERS.MAX}`
-      });
-    }
+  if (
+    !Number.isInteger(parsedQuantity) ||
+    parsedQuantity < 1 ||
+    parsedQuantity > MOCKING_PARAMETERS.MAX
+  ) {
+    logger.warning(
+      `Cantidad inválida para mocks: ${quantity}. La cantidad debe ser un número entero entre 1 y ${MOCKING_PARAMETERS.MAX}.`
+    );
 
-    return parsedQuantity;
+    throw CustomError.createError({
+      name: ERROR_TYPES.INVALID_QUANTITY,
+      cause: `La cantidad debe ser un número entero entre 1 y ${MOCKING_PARAMETERS.MAX}.`
+    });
   }
+
+  return parsedQuantity;
+}
 
   // =========================
   // MOCKS SIN PERSISTENCIA

@@ -29,7 +29,39 @@ const deliverySchema = new mongoose.Schema({
   deliveredAt: {
     type: Date,
     default: null
-  }
+  },
+proofs: {
+  type: [
+    {
+      originalName: {
+        type: String,
+        required: true
+      },
+      filename: {
+        type: String,
+        required: true
+      },
+      path: {
+        type: String,
+        required: true
+      },
+      mimetype: {
+        type: String,
+        required: true
+      },
+      size: {
+        type: Number,
+        required: true
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ],
+  default: []
+},
+
 }, {
   timestamps: true
 });

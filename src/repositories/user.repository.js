@@ -31,6 +31,23 @@ class UserRepository {
   async deleteById(id) {
     return User.findByIdAndDelete(id);
   }
+
+// Método para agregar un documento a un usuario
+async addDocument(userId, documentData) {
+  return User.findByIdAndUpdate(
+    userId,
+    {
+      $push: {
+        documents: documentData
+      }
+    },
+    {
+      new: true,
+      runValidators: true
+    }
+  ).select("-password");
+}
+
 }
 
 // Exportamos una instancia de la clase UserRepository

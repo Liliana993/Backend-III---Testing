@@ -2,3 +2,4 @@
 /logs
 .env
 .env.test
+/uploads

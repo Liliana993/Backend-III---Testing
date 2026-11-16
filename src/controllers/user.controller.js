@@ -90,6 +90,35 @@ class UserController {
       next(error);
     }
   }
+
+
+async ensureExists(req, res, next) {
+  try {
+    await userService.getUserById(req.params.id);
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+async uploadDocument(req, res, next) {
+  try {
+    const updatedUser = await userService.addUserDocument(
+      req.params.id,
+      req.file,
+      req.body.documentType
+    );
+
+    return res.status(201).json({
+      status: "success",
+      message: "Documento cargado correctamente",
+      payload: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 }
 
 export default new UserController();

@@ -89,6 +89,7 @@ describe("POST /api/orders", function () {
     expect(response.body.status).to.equal("error");
   });
 
+});
 
 describe("GET /api/orders/:id", function () {
 
@@ -139,6 +140,9 @@ describe("GET /api/orders/:id", function () {
 
     expect(response.status).to.equal(404);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.equal("ORDER_NOT_FOUND");
+    expect(response.body.message).to.equal("Pedido no encontrado");
+    expect(response.body.cause).to.include("No existe una orden con id");
   });
 
 });
@@ -226,6 +230,9 @@ describe("PUT /api/orders/:id", function () {
 
     expect(response.status).to.equal(400);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.equal("VALIDATION_ERROR");
+    expect(response.body.message).to.include("Validation failed");
+    expect(response.body.message).to.include("estado_invalido");
   });
 
   it("Debe devolver 404 al actualizar una orden inexistente", async function () {
@@ -238,9 +245,13 @@ describe("PUT /api/orders/:id", function () {
 
     expect(response.status).to.equal(404);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.equal("ORDER_NOT_FOUND");
+    expect(response.body.message).to.equal("Pedido no encontrado");
+    expect(response.body.cause).to.include("No existe una orden con id");
   });
 
 });
+
 
 describe("DELETE /api/orders/:id", function () {
 
@@ -296,8 +307,9 @@ describe("DELETE /api/orders/:id", function () {
 
     expect(response.status).to.equal(404);
     expect(response.body.status).to.equal("error");
+    expect(response.body.error).to.equal("ORDER_NOT_FOUND");
+    expect(response.body.message).to.equal("Pedido no encontrado");
+    expect(response.body.cause).to.include("No existe una orden con id");
   });
-
-});
 
 });

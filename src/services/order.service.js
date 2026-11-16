@@ -55,6 +55,7 @@ class OrderService {
     const existingCustomer = await userRepository.getById(customer);
 
     if (!existingCustomer) {
+      logger.warning(`Cliente no encontrado: ${customer}`);
       throw CustomError.createError({
        name: ERROR_TYPES.USER_NOT_FOUND,
        cause: `No existe un usuario con id ${customer}`
@@ -87,6 +88,7 @@ class OrderService {
     );
 
     if (!updatedOrder) {
+      logger.warning(`Pedido no encontrado: ${id}`);
       throw CustomError.createError({
         name: ERROR_TYPES.ORDER_NOT_FOUND,
         cause: `No existe una orden con id ${id}`
@@ -100,6 +102,7 @@ class OrderService {
     const deletedOrder = await orderRepository.delete(id);
 
     if (!deletedOrder) {
+      logger.warning(`Pedido no encontrado: ${id}`);
       throw CustomError.createError({
         name: ERROR_TYPES.ORDER_NOT_FOUND,
         cause: `No existe una orden con id ${id}`
