@@ -18,14 +18,32 @@ const router = Router();
  *     description: Gestión de entregas de ShipNow
  */
 
+
 /**
  * @swagger
  * /api/deliveries:
  *   get:
  *     summary: Obtener todas las entregas
- *     description: Lista las entregas y permite filtrarlas por estado, prioridad y repartidor.
+ *     description: Lista las entregas con paginación y permite filtrarlas por estado, prioridad y repartidor.
  *     tags: [Deliveries]
  *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Cantidad máxima de entregas por página
  *       - in: query
  *         name: status
  *         required: false
@@ -53,6 +71,7 @@ const router = Router();
  *           application/json:
  *             schema:
  *               type: object
+ *               required: [status, payload, pagination]
  *               properties:
  *                 status:
  *                   type: string
@@ -61,6 +80,21 @@ const router = Router();
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Delivery'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 25
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
  *       500:
  *         description: Error interno del servidor
  *         content:
@@ -139,12 +173,13 @@ router.get("/", deliveryController.getAll);
  */
 router.get("/order/:orderId", deliveryController.getByOrder);
 
+
 /**
  * @swagger
  * /api/deliveries/driver/{driverId}:
  *   get:
  *     summary: Obtener entregas por repartidor
- *     description: Lista las entregas asociadas a un repartidor.
+ *     description: Lista las entregas asociadas a un repartidor con paginación.
  *     tags: [Deliveries]
  *     parameters:
  *       - in: path
@@ -154,6 +189,23 @@ router.get("/order/:orderId", deliveryController.getByOrder);
  *         schema:
  *           type: string
  *           example: 671a12345678901234567890
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Cantidad máxima de entregas por página
  *     responses:
  *       200:
  *         description: Entregas obtenidas exitosamente
@@ -169,6 +221,21 @@ router.get("/order/:orderId", deliveryController.getByOrder);
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Delivery'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 12
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 2
  *       400:
  *         description: El identificador del repartidor no es válido
  *         content:
@@ -202,6 +269,7 @@ router.get("/order/:orderId", deliveryController.getByOrder);
  *               error: INTERNAL_SERVER_ERROR
  *               message: Error interno del servidor
  *               cause: No se pudieron obtener las entregas
+ *
  */
 router.get("/driver/:driverId", deliveryController.getByDriver);
 

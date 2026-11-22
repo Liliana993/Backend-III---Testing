@@ -49,7 +49,7 @@ const fileFormat = winston.format.combine(
 );
 
 const consoleTransport = new winston.transports.Console({
-level: config.environment === "development" ? "debug" : "info",
+level: config.logLevel,
 format: consoleFormat,
 });
 
@@ -57,7 +57,7 @@ const combinedTransport = new DailyRotateFile({
 filename: "logs/combined-%DATE%.log",
 datePattern: "YYYY-MM-DD",
 maxFiles: "14d",
-level: config.environment === "development" ? "debug" : "info",
+level: config.logLevel,
 format: fileFormat,
 });
 
@@ -71,7 +71,7 @@ format: fileFormat,
 
 const logger = winston.createLogger({
 levels: customLevels.levels,
-level: "debug",
+level: config.logLevel,
 transports: [
 consoleTransport,
 combinedTransport,

@@ -1,27 +1,44 @@
 import Delivery from "../models/delivery.model.js";
 
 class DeliveryRepository {
+  // Método para obtener todas las entregas con filtros y paginación 
+ async getAll(filters = {}) {
+   const {
+    status,
+    priority,
+    driver,
+    page = 1,
+    limit = 10
+   } = filters;
 
-  async getAll(filters = {}) {
-    const query = {};
+   const query = {};
 
-    if (filters.status) {
-      query.status = filters.status;
-    }
+   if (status) query.status = status;
+   if (priority) query.priority = priority;
+   if (driver) query.driver = driver;
 
-    if (filters.priority) {
-      query.priority = filters.priority;
-    }
+   const skip = (page - 1) * limit;
 
-    if (filters.driver) {
-      query.driver = filters.driver;
-    }
-
-    return Delivery.find(query)
+   const [deliveries, total] = await Promise.all([
+    Delivery.find(query)
       .populate("order")
       .populate("driver", "-password")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    Delivery.countDocuments(query)
+   ]);
+
+   return {
+    data: deliveries,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+   };
   }
+
 
   async getById(id) {
     return Delivery.findById(id)
@@ -37,15 +54,32 @@ class DeliveryRepository {
       .populate("driver", "-password");
   }
 
-  async getByDriver(driverId) {
-    return Delivery.find({
-      driver: driverId
-    })
+  
+ async getByDriver(driverId, { page = 1, limit = 10 } = {}) {
+  const query = { driver: driverId };
+  const skip = (page - 1) * limit;
+
+  const [deliveries, total] = await Promise.all([
+    Delivery.find(query)
       .populate("order")
       .populate("driver", "-password")
-      .sort({ createdAt: -1 });
-  }
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
 
+    Delivery.countDocuments(query)
+  ]);
+
+  return {
+    data: deliveries,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
+ }
+
+ 
   async create(data) {
     return Delivery.create(data);
   }

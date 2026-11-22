@@ -1,19 +1,27 @@
 import orderService from "../services/order.service.js";
 
 class OrderController {
-  async getAll(req, res, next) {
-    try {
-      const orders = await orderService.getAll(req.query);
+ // Método para obtener todas las órdenes con filtros y paginación  
+ async getAll(req, res, next) {
+  try {
+    const result = await orderService.getAll(req.query);
 
-      return res.status(200).json({
-        status: "success",
-        message: "Órdenes obtenidas exitosamente",
-        payload: orders
-      });
-    } catch (error) {
-      next(error); // Pasamos el error al middleware de manejo de errores
-    }
+    return res.status(200).json({
+      status: "success",
+      message: "Órdenes obtenidas exitosamente",
+      payload: result.data,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages
+      }
+    });
+  } catch (error) {
+    next(error);
   }
+ }
+
 
   async getOrderById(req, res, next) {
     try {

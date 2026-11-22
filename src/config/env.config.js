@@ -37,10 +37,30 @@ if (!allowedEnvs.includes(environment)) {
     )
 }
 
+// Validación de LOG_LEVEL
+const allowedLogLevels = [
+    "fatal",
+    "error",
+    "warning",
+    "info",
+    "http",
+    "debug"
+];
+
+const logLevel = process.env.LOG_LEVEL ||
+    (environment === "development" ? "debug" : "info");
+
+if (!allowedLogLevels.includes(logLevel)) {
+    throw new Error(
+        `[Config Error] LOG_LEVEL inválido. Valores permitidos: ${allowedLogLevels.join(", ")}. Valor actual: ${logLevel}`
+    );
+}
+
 // Exportación de configuración
 const config = Object.freeze({
     port,
     environment,
+    logLevel,
     mongodbUri: process.env.MONGODB_URI,
     jwtSecret: process.env.JWT_SECRET
 });

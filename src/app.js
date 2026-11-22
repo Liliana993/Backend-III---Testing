@@ -25,22 +25,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Documentación Swagger
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+// Documentación Swagger (solo en desarrollo y testing)
+if (config.environment !== "production") {
+  app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+}
 
 // Rutas
 app.use("/api/users", userRouter);
-app.use("/api/mocks", mockRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/deliveries", deliveriesRouter);
-app.use("/api/logger", loggerRouter);
+// Rutas internas (solo en desarrollo y testing)
+if (config.environment !== "production") {
+  app.use("/api/mocks", mockRouter);
+  app.use("/api/logger", loggerRouter);
+}
+
 
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    environment: config.environment,
+    environment: config.environment, // Entorno de ejecución (development, production, test)
+    uptime: process.uptime(), // Tiempo de actividad del proceso en segundos
   });
 });
 

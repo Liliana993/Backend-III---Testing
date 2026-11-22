@@ -9,17 +9,30 @@ import CustomError from "../errors/CustomError.js";
 import logger from "../config/logger.config.js";
 
 class DeliveryService {
-  async getAllDeliveries(filters = {}) {
-    logger.debug("Consultando deliveries");
+ // Método para obtener todas las entregas con filtros y paginación  
+ async getAllDeliveries(filters = {}) {
+   const requestedPage = Number(filters.page);
+   const requestedLimit = Number(filters.limit);
 
-    const deliveries = await deliveryRepository.getAll(filters);
+   const page =
+    Number.isInteger(requestedPage) && requestedPage > 0
+      ? requestedPage
+      : 1;
 
-    logger.info("Deliveries consultados correctamente", {
-      count: deliveries.length,
-    });
+   const limit =
+    Number.isInteger(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 100)
+      : 10;
 
-    return deliveries;
+   const result = await deliveryRepository.getAll({
+    ...filters,
+    page,
+    limit
+   });
+
+   return result;
   }
+
 
   async getDeliveryById(id) {
     logger.debug("Buscando delivery por ID", { deliveryId: id });
@@ -51,21 +64,39 @@ class DeliveryService {
     return delivery;
   }
 
-  async getDeliveriesByDriver(driverId) {
-    logger.debug("Consultando deliveries por repartidor", {
-      driverId,
-    });
+   
+ async getDeliveriesByDriver(driverId, filters = {}) {
+  logger.debug("Consultando deliveries por repartidor", {
+    driverId
+  });
 
-    const deliveries =
-      await deliveryRepository.getByDriver(driverId);
+  const requestedPage = Number(filters.page);
+  const requestedLimit = Number(filters.limit);
 
-    logger.info("Deliveries del repartidor consultados", {
-      driverId,
-      count: deliveries.length,
-    });
+  const page =
+    Number.isInteger(requestedPage) && requestedPage > 0
+      ? requestedPage
+      : 1;
 
-    return deliveries;
-  }
+  const limit =
+    Number.isInteger(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 100)
+      : 10;
+
+  const result = await deliveryRepository.getByDriver(driverId, {
+    page,
+    limit
+  });
+
+  logger.info("Deliveries del repartidor consultados", {
+    driverId,
+    count: result.data.length,
+    total: result.total
+  });
+
+  return result;
+ }
+
 
   async createDelivery(data) {
     logger.debug("Iniciando creación de delivery", {

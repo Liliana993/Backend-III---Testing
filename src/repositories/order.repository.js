@@ -1,26 +1,44 @@
 import Order from "../models/order.model.js";
 
 class OrderRepository {
-  async findAll(filters = {}) {
-    const query = {};
+ // Método para obtener todas las órdenes con filtros y paginación
+ async findAll(filters = {}) {
+  const {
+    status,
+    priority,
+    customer,
+    page = 1,
+    limit = 10
+  } = filters;
 
-    if (filters.status) {
-      query.status = filters.status;
-    }
+  const query = {};
 
-    if (filters.priority) {
-      query.priority = filters.priority;
-    }
+  if (status) query.status = status;
+  if (priority) query.priority = priority;
+  if (customer) query.customer = customer;
 
-    if (filters.customer) {
-      query.customer = filters.customer;
-    }
+  const skip = (page - 1) * limit;
 
-    return Order.find(query)
+  const [orders, total] = await Promise.all([
+    Order.find(query)
       .populate("customer", "firstName lastName email")
       .populate("delivery")
-      .sort({ createdAt: -1 });
-  }
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    Order.countDocuments(query)
+  ]);
+
+  return {
+    data: orders,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
+ }
+
 
   async findById(id) {
     return Order.findById(id)
@@ -37,7 +55,7 @@ class OrderRepository {
       id,
       orderData,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true
       }
     )
@@ -52,7 +70,7 @@ class OrderRepository {
   return Order.findByIdAndUpdate(
     orderId,
     { delivery: deliveryId },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
    )
     .populate("customer", "firstName lastName email")
     .populate("delivery");

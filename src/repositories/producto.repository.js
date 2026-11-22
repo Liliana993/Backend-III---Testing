@@ -61,7 +61,7 @@ class ProductRepository {
       id,
       data,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true
       }
     ).select("-__v");

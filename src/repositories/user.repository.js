@@ -1,9 +1,28 @@
 import User from "../models/user.model.js";
 
 class UserRepository {
-  async getAll() {
-    return User.find().select("-password");
-  }
+  // Método para obtener todos los usuarios con paginación
+  async getAll({ page = 1, limit = 10 } = {}) {
+  const skip = (page - 1) * limit;
+
+  const [users, total] = await Promise.all([
+    User.find()
+      .select("-password")
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    User.countDocuments()
+  ]);
+
+  return {
+    data: users,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
+}
 
   async getById(id) {
     return User.findById(id).select("-password");
@@ -22,7 +41,7 @@ class UserRepository {
       id,
       data,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true
       }
     ).select("-password");
@@ -42,7 +61,7 @@ async addDocument(userId, documentData) {
       }
     },
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true
     }
   ).select("-password");

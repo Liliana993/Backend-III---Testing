@@ -11,25 +11,34 @@ class DeliveryController {
     }
   }
 
-  async getAll(req, res, next) {
-    try {
-      const { status, priority, driver } = req.query;
+ // Método para obtener todos los deliveries con filtros y paginación
+ async getAll(req, res, next) {
+  try {
+    const { status, priority, driver, page, limit } = req.query;
 
-      const deliveries = await deliveryService.getAllDeliveries({
-        status,
-        priority,
-        driver
-      });
+    const result = await deliveryService.getAllDeliveries({
+      status,
+      priority,
+      driver,
+      page,
+      limit
+    });
 
-      res.status(200).json({
-        status: "success",
-        payload: deliveries
-      });
-
-    } catch (error) {
-      next(error);
-    }
+    return res.status(200).json({
+      status: "success",
+      payload: result.data,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages
+      }
+    });
+  } catch (error) {
+    next(error);
   }
+ }
+
 
   async getById(req, res, next) {
     try {
@@ -63,22 +72,31 @@ class DeliveryController {
     }
   }
 
-  async getByDriver(req, res, next) {
-    try {
-      const { driverId } = req.params;
+  
+ async getByDriver(req, res, next) {
+  try {
+    const { driverId } = req.params;
 
-      const deliveries =
-        await deliveryService.getDeliveriesByDriver(driverId);
+    const result = await deliveryService.getDeliveriesByDriver(
+      driverId,
+      req.query
+    );
 
-      res.status(200).json({
-        status: "success",
-        payload: deliveries
-      });
-
-    } catch (error) {
-      next(error);
-    }
+    return res.status(200).json({
+      status: "success",
+      payload: result.data,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages
+      }
+    });
+  } catch (error) {
+    next(error);
   }
+ }
+
 
   async create(req, res, next) {
     try {

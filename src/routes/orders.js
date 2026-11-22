@@ -10,12 +10,44 @@ const router = Router();
  *     description: Gestión de órdenes de ShipNow
  */
 
+
 /**
  * @swagger
  * /api/orders:
  *   get:
  *     summary: Obtener todas las órdenes
  *     tags: [Orders]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Cantidad máxima de órdenes por página
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filtrar órdenes por estado
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *         description: Filtrar órdenes por prioridad
+ *       - in: query
+ *         name: customer
+ *         schema:
+ *           type: string
+ *         description: Filtrar órdenes por ID del cliente
  *     responses:
  *       200:
  *         description: Órdenes obtenidas exitosamente
@@ -23,7 +55,7 @@ const router = Router();
  *           application/json:
  *             schema:
  *               type: object
- *               required: [status, message, payload]
+ *               required: [status, message, payload, pagination]
  *               properties:
  *                 status:
  *                   type: string
@@ -35,6 +67,21 @@ const router = Router();
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Order'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 25
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
  *       500:
  *         description: Error interno del servidor
  *         content:
@@ -300,7 +347,7 @@ router.put("/:id", orderController.update);
  *             example:
  *               status: error
  *               error: VALIDATION_ERROR
- *               message: Validation failed: status: estado_invalido is not a valid enum value for path status.
+ *               message: "Validation failed: status: estado_invalido is not a valid enum value for path status."
  *               cause: No se proporcionó información adicional
  *       404:
  *         description: Orden no encontrada

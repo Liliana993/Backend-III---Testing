@@ -13,9 +13,28 @@ import CustomError from "../errors/CustomError.js";
 
 class OrderService {
 
-  async getAll(filter = {}) {
-    return await orderRepository.findAll(filter);
-  }
+  // Método para obtener todas las órdenes con filtros y paginación
+  async getAll(filters = {}) {
+   const requestedPage = Number(filters.page);
+   const requestedLimit = Number(filters.limit);
+
+   const page =
+    Number.isInteger(requestedPage) && requestedPage > 0
+      ? requestedPage
+      : 1;
+
+   const limit =
+    Number.isInteger(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 100)
+      : 10;
+
+   return orderRepository.findAll({
+    ...filters,
+    page,
+    limit
+  });
+ }
+
 
   async getOrderById(id) {
     const order = await orderRepository.findById(id);

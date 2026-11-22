@@ -4,9 +4,26 @@ import CustomError from "../errors/CustomError.js";
 
 class UserService {
 
-  async getAllUsers() {
-    return await userRepository.getAll();
-  }
+  // Método para obtener todos los usuarios con paginación y validación de parámetros
+  async getAllUsers({ page = 1, limit = 10 } = {}) {
+  const requestedPage = Number(page);
+  const requestedLimit = Number(limit);
+
+  const safePage =
+    Number.isInteger(requestedPage) && requestedPage > 0
+      ? requestedPage
+      : 1;
+
+  const safeLimit =
+    Number.isInteger(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 100)
+      : 10;
+
+  return userRepository.getAll({
+    page: safePage,
+    limit: safeLimit
+  });
+}
 
   async getUserById(id) {
     const user = await userRepository.getById(id);

@@ -10,12 +10,31 @@ import {
 
 const router = Router();
 
+// Rutas para la gestión de usuarios 
 /**
  * @swagger
  * /api/users:
  *   get:
- *     summary: Obtener todos los usuarios
+ *     summary: Obtener usuarios con paginación
  *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página.
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Cantidad de usuarios por página.
  *     responses:
  *       200:
  *         description: Usuarios obtenidos correctamente.
@@ -31,20 +50,27 @@ const router = Router();
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/User'
- *             example:
- *               status: success
- *               payload: []
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 45
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 5
  *       500:
  *         description: Error interno del servidor.
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               status: error
- *               error: INTERNAL_SERVER_ERROR
- *               message: Error interno del servidor
- *               cause: Se produjo un error inesperado
  */
 router.get("/", userController.getAll);
 

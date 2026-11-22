@@ -1,17 +1,24 @@
 import userService from "../services/user.service.js";
 class UserController {
+  // Método para obtener todos los usuarios con paginación y validación de parámetros
   async getAll(req, res, next) {
-    try {
-      const users = await userService.getAllUsers();
+  try {
+    const result = await userService.getAllUsers(req.query);
 
-      return res.status(200).json({
-        status: "success",
-        payload: users
-      });
-    } catch (error) {
-      next(error);
-    }
+    return res.status(200).json({
+      status: "success",
+      payload: result.data,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages
+      }
+    });
+  } catch (error) {
+    next(error);
   }
+}
 
   async getById(req, res, next) {
     try {
