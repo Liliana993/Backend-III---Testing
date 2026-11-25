@@ -1,0 +1,45 @@
+
+services:
+  mongo:
+    image: mongo:8
+    container_name: shipnow-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "db.adminCommand('ping').ok"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shipnow-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017/shipnow
+      JWT_SECRET: ${JWT_SECRET:?Debes configurar JWT_SECRET en .env}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - shipnow_logs:/app/logs
+      - shipnow_uploads:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
+  shipnow_logs:
+  shipnow_uploads:

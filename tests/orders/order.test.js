@@ -24,6 +24,66 @@ describe("GET /api/orders", function () {
     expect(response.body.payload).to.have.lengthOf(0);
   });
 
+  it("Debe devolver órdenes paginadas con page y limit", async () => {
+  // Crear tres órdenes con sus respectivos clientes
+  for (let i = 1; i <= 3; i++) {
+    const userRes = await request(app)
+      .post("/api/users")
+      .send({
+        firstName: "Cliente",
+        lastName: `Prueba${i}`,
+        email: `pagination.order${i}@example.com`,
+        password: "Password123"
+      });
+
+    const customerId = userRes.body.payload._id;
+
+    await request(app)
+      .post("/api/orders")
+      .send({
+        customer: customerId,
+        deliveryAddress: "Av. San Martin 123",
+        items: [
+          {
+            name: "Producto de prueba",
+            quantity: 2,
+            price: 1500
+          }
+        ]
+      });
+  }
+
+  const res = await request(app)
+    .get("/api/orders?page=1&limit=2");
+
+  expect(res.status).to.equal(200);
+  expect(res.body.status).to.equal("success");
+  expect(res.body.payload).to.be.an("array");
+  expect(res.body.payload).to.have.lengthOf(2);
+
+  expect(res.body.pagination).to.deep.equal({
+    total: 3,
+    page: 1,
+    limit: 2,
+    totalPages: 2
+  });
+});
+
+it("Debe devolver un array vacío cuando la página de órdenes está fuera de rango", async () => {
+  const res = await request(app)
+    .get("/api/orders?page=10&limit=2");
+
+  expect(res.status).to.equal(200);
+  expect(res.body.payload).to.be.an("array").that.is.empty;
+
+  expect(res.body.pagination).to.deep.equal({
+    total: 0,
+    page: 10,
+    limit: 2,
+    totalPages: 0
+  });
+});
+
 });
 
 describe("POST /api/orders", function () {

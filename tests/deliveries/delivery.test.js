@@ -6,13 +6,13 @@ import request from "supertest";
 import app from "../../src/app.js";
 
 // Crea un usuario, una orden y un delivery para las pruebas
-async function createDelivery() {
+async function createDelivery(email = "ana.deliveries@example.com") {
   const userResponse = await request(app)
     .post("/api/users")
     .send({
       firstName: "Ana",
       lastName: "Lopez",
-      email: "ana.deliveries@example.com",
+      email,
       password: "Password123"
     });
 
@@ -42,6 +42,97 @@ async function createDelivery() {
 
   return deliveryResponse.body.payload._id;
 }
+
+// Crea un usuario con rol de "driver" para las pruebas
+async function createDriver(email = "driver@example.com") {
+  const response = await request(app)
+    .post("/api/users")
+    .send({
+      firstName: "Carlos",
+      lastName: "Repartidor",
+      email,
+      password: "Password123",
+      role: "driver"
+    });
+
+  return response.body.payload._id;
+}
+
+describe("GET /api/deliveries", function () {
+
+  it("Debe devolver entregas paginadas con page y limit", async function () {
+    await createDelivery("delivery1@example.com");
+    await createDelivery("delivery2@example.com");
+    await createDelivery("delivery3@example.com");
+
+    const response = await request(app)
+      .get("/api/deliveries?page=1&limit=2");
+
+    expect(response.status).to.equal(200);
+    expect(response.body.status).to.equal("success");
+    expect(response.body.payload).to.be.an("array");
+    expect(response.body.payload).to.have.lengthOf(2);
+
+    expect(response.body.pagination).to.deep.equal({
+      total: 3,
+      page: 1,
+      limit: 2,
+      totalPages: 2
+    });
+  });
+
+  it("Debe devolver un array vacío cuando la página de entregas está fuera de rango", async function () {
+  const response = await request(app)
+    .get("/api/deliveries?page=10&limit=2");
+
+  expect(response.status).to.equal(200);
+  expect(response.body.payload).to.be.an("array").that.is.empty;
+
+  expect(response.body.pagination).to.deep.equal({
+    total: 0,
+    page: 10,
+    limit: 2,
+    totalPages: 0
+  });
+});
+
+});
+
+describe("GET /api/deliveries/driver/:driverId", function () {
+
+  it("Debe devolver entregas paginadas por repartidor", async function () {
+    const driverId = await createDriver();
+
+    // Crear y asignar tres entregas al mismo repartidor
+    for (let i = 1; i <= 3; i++) {
+      const deliveryId = await createDelivery(
+        `delivery.driver${i}@example.com`
+      );
+
+      const assignResponse = await request(app)
+        .patch(`/api/deliveries/${deliveryId}/assign`)
+        .send({ driverId });
+
+      expect(assignResponse.status).to.equal(200);
+    }
+
+    const response = await request(app)
+      .get(`/api/deliveries/driver/${driverId}?page=1&limit=2`);
+
+    expect(response.status).to.equal(200);
+    expect(response.body.status).to.equal("success");
+    expect(response.body.payload).to.be.an("array");
+    expect(response.body.payload).to.have.lengthOf(2);
+
+    expect(response.body.pagination).to.deep.equal({
+      total: 3,
+      page: 1,
+      limit: 2,
+      totalPages: 2
+    });
+  });
+
+});
 
 describe("POST /api/deliveries/:id/proofs", function () {
 

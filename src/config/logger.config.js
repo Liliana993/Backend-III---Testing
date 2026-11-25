@@ -1,24 +1,25 @@
+
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import config from "./env.config.js";
 
 const customLevels = {
-levels: {
-fatal: 0,
-error: 1,
-warning: 2,
-info: 3,
-http: 4,
-debug: 5,
-},
-colors: {
-fatal: "red",
-error: "red",
-warning: "yellow",
-info: "green",
-http: "cyan",
-debug: "blue",
-},
+  levels: {
+    fatal: 0,
+    error: 1,
+    warning: 2,
+    info: 3,
+    http: 4,
+    debug: 5,
+  },
+  colors: {
+    fatal: "red",
+    error: "red",
+    warning: "yellow",
+    info: "green",
+    http: "cyan",
+    debug: "blue",
+  },
 };
 
 winston.addColors(customLevels.colors);
@@ -39,7 +40,6 @@ const consoleFormat = winston.format.combine(
   })
 );
 
-
 // Formato estructurado para los archivos
 const fileFormat = winston.format.combine(
   winston.format.timestamp({
@@ -48,34 +48,43 @@ const fileFormat = winston.format.combine(
   winston.format.json()
 );
 
-const consoleTransport = new winston.transports.Console({
-level: config.logLevel,
-format: consoleFormat,
-});
-
+// Transporte general: actividad de la aplicación
 const combinedTransport = new DailyRotateFile({
-filename: "logs/combined-%DATE%.log",
-datePattern: "YYYY-MM-DD",
-maxFiles: "14d",
-level: config.logLevel,
-format: fileFormat,
+  filename: "logs/combined-%DATE%.log",
+  datePattern: "YYYY-MM-DD",
+  maxFiles: "14d",
+  level: config.logLevel,
+  format: fileFormat,
 });
 
+// Transporte exclusivo para errores
 const errorTransport = new DailyRotateFile({
-filename: "logs/error-%DATE%.log",
-datePattern: "YYYY-MM-DD",
-maxFiles: "30d",
-level: "error",
-format: fileFormat,
+  filename: "logs/error-%DATE%.log",
+  datePattern: "YYYY-MM-DD",
+  maxFiles: "30d",
+  level: "error",
+  format: fileFormat,
 });
+
+// La consola se utiliza exclusivamente en desarrollo
+const transports = [
+  combinedTransport,
+  errorTransport,
+];
+
+if (config.environment === "development") {
+  transports.push(
+    new winston.transports.Console({
+      level: config.logLevel,
+      format: consoleFormat,
+    })
+  );
+}
 
 const logger = winston.createLogger({
-levels: customLevels.levels,
-level: config.logLevel,
-transports: [
-consoleTransport,
-combinedTransport,
-errorTransport,
-],
+  levels: customLevels.levels,
+  level: config.logLevel,
+  transports,
 });
+
 export default logger;

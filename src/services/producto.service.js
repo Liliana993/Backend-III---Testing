@@ -3,9 +3,14 @@ import { PRODUCT_STATUS } from "../constants/index.js";
 
 class ProductService {
 
-  async getAllProducts(filters = {}) {
-    return await productRepository.getAll(filters);
-  }
+  async getAllProducts(filters = {}, pagination = {}) {
+  const page = Math.max(1, Number.parseInt(pagination.page, 10) || 1);
+
+  const requestedLimit = Number.parseInt(pagination.limit, 10) || 10;
+  const limit = Math.min(100, Math.max(1, requestedLimit));
+
+  return await productRepository.getAll(filters, { page, limit });
+ }
 
   async getProductById(id) {
     const product = await productRepository.getById(id);

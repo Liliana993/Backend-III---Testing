@@ -3,3 +3,5 @@
 .env
 .env.test
 /uploads
+/coverage
+/.nyc_output

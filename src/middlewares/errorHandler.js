@@ -1,4 +1,3 @@
-
 import ERROR_DICTIONARY from "../errors/errorDictionary.js";
 import { ERROR_TYPES } from "../constants/index.js";
 import logger from "../config/logger.config.js";
@@ -10,21 +9,27 @@ const errorHandler = (error, req, res, next) => {
   }
 
   const isCastError = error.name === "CastError";
-  
-   const isValidationError = error.name === "ValidationError";
-   const isMongooseValidationError = isCastError || isValidationError;
+  const isValidationError = error.name === "ValidationError";
+  const isMongooseValidationError = isCastError || isValidationError;
+
+  const isPayloadTooLarge =
+    error.type === "entity.too.large" || error.status === 413;
 
   const errorData = ERROR_DICTIONARY[error.name];
 
   const status = isMongooseValidationError
     ? 400
-    : error.status || errorData?.status || 500;
+    : isPayloadTooLarge
+      ? 413
+      : error.status || errorData?.status || 500;
 
   const message = isCastError
     ? "El identificador proporcionado no es válido"
-    : error.message ||
-      errorData?.message ||
-      "Error interno del servidor";
+    : isPayloadTooLarge
+      ? ERROR_DICTIONARY[ERROR_TYPES.PAYLOAD_TOO_LARGE].message
+      : error.message ||
+        errorData?.message ||
+        "Error interno del servidor";
 
   const cause = isCastError
     ? `El valor "${error.value}" no tiene un formato válido para ${error.path}`
@@ -35,7 +40,9 @@ const errorHandler = (error, req, res, next) => {
     method: req.method,
     url: req.originalUrl,
     status,
-    errorName: error.name || "UNKNOWN_ERROR",
+    errorName: isPayloadTooLarge
+      ? ERROR_TYPES.PAYLOAD_TOO_LARGE
+      : error.name || "UNKNOWN_ERROR",
     message,
     cause,
     stack: error.stack
@@ -49,9 +56,11 @@ const errorHandler = (error, req, res, next) => {
 
   return res.status(status).json({
     status: "error",
-    error: isMongooseValidationError
-      ? ERROR_TYPES.VALIDATION_ERROR
-      : error.name || "INTERNAL_SERVER_ERROR",
+    error: isPayloadTooLarge
+      ? ERROR_TYPES.PAYLOAD_TOO_LARGE
+      : isMongooseValidationError
+        ? ERROR_TYPES.VALIDATION_ERROR
+        : error.name || "INTERNAL_SERVER_ERROR",
     message,
     cause
   });

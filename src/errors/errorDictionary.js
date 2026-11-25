@@ -45,6 +45,11 @@ const ERROR_DICTIONARY = {
     status: 400,
     message: "Error de validación"
   },
+  
+  [ERROR_TYPES.PAYLOAD_TOO_LARGE]: {
+  status: 413,
+  message: "El cuerpo de la solicitud supera el tamaño máximo permitido"
+ },
 
   [ERROR_TYPES.DATABASE_ERROR]: {
     status: 500,

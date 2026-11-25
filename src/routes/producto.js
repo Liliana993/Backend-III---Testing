@@ -11,11 +11,12 @@ const router = Router();
  *     description: Gestión y consulta de productos
  */
 
+
 /**
  * @swagger
  * /api/products:
  *   get:
- *     summary: Obtener productos con filtros opcionales
+ *     summary: Obtener productos paginados con filtros opcionales
  *     tags: [Products]
  *     parameters:
  *       - in: query
@@ -45,6 +46,23 @@ const router = Router();
  *         description: Filtrar por disponibilidad de stock.
  *         schema:
  *           type: boolean
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         description: Número de página (por defecto 1).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Cantidad de productos por página (por defecto 10, máximo 100).
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
  *     responses:
  *       200:
  *         description: Productos obtenidos correctamente.
@@ -60,9 +78,40 @@ const router = Router();
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Product'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 25
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
  *             example:
  *               status: success
  *               payload: []
+ *               pagination:
+ *                 total: 0
+ *                 page: 1
+ *                 limit: 10
+ *                 totalPages: 0
+ *       400:
+ *         description: Parámetros de paginación inválidos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: error
+ *               error: VALIDATION_ERROR
+ *               message: Los parámetros page y limit deben ser enteros positivos. El límite máximo es 100.
+ *               cause: 400
  *       500:
  *         description: Error interno al obtener los productos.
  *         content:
@@ -76,6 +125,7 @@ const router = Router();
  *               cause: Se produjo un error inesperado
  */
 router.get("/", productController.getAll);
+
 
 /**
  * @swagger
